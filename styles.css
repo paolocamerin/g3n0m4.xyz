@@ -1,0 +1,56 @@
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: 'Space Grotesk', sans-serif;
+    color: white;
+    background-color: black;
+}
+
+
+
+.content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-size: 3em;
+    max-width: 80%;
+}
+
+@media (max-width: 400px) {
+    .content {
+        font-size: 2em;
+        max-width: 90%;
+    }
+
+    .coming-soon {
+        font-size: 0.6em;
+    }
+}
+
+a {
+    color: white;
+    text-decoration: none;
+}
+
+a:hover {
+    opacity: 0.7;
+}
+
+.footer {
+    position: fixed;
+    bottom: 2rem;
+    width: 100%;
+    text-align: center;
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+.coming-soon {
+    font-size: 0.5em;
+    color: #666;
+    margin-top: 1rem;
+    font-weight: 300;
+}
