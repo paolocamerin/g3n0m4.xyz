@@ -96,6 +96,12 @@ main {
 
 
 @media (max-width: 600px) {
+
+    html,
+    body {
+        overflow: hidden;
+    }
+
     .content {
         font-size: 1.5em;
         max-width: 70%;
