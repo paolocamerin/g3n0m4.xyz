@@ -24,7 +24,12 @@
         </div>
         <button class="upload-btn" onclick="document.getElementById('fontFile').click()">Choose Font</button>
         <input type="file" id="fontFile" accept=".ttf,.otf,.woff">
-        <div class="hidden" id="status"></div>
+
+        <div class="stored-fonts">
+            <select id="fontSelect">
+                <option value="">Select a stored font</option>
+            </select>
+        </div>
         <div class="color-controls">
 
             <div id="fillPicker" class="color-swatch"></div>
@@ -59,7 +64,7 @@
         </div>
         <div class="slider-container" style="margin-top: 10px;">
             <label for="waveFrequencySlider">Wave Frequency: <span id="waveFrequencyValue">0.004</span></label>
-            <input type="range" id="waveFrequencySlider" min="0.0001" max="3" step="0.0001" value="0.004">
+            <input type="range" id="waveFrequencySlider" min="0.0001" max="3" step="1" value="0.004">
 
         </div>
         <div class="slider-container" style="margin-top: 10px;">
