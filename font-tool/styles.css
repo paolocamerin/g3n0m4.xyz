@@ -6,6 +6,7 @@ canvas {
 /* Utility class for hiding elements */
 .hidden {
     display: none !important;
+    visibility: hidden !important;
 }
 
 /* Control panel styling */
@@ -13,14 +14,28 @@ canvas {
     position: fixed;
     bottom: 20px;
     left: 20px;
+    /* Fallback for browsers that don't support backdrop-filter */
     background-color: #525252b6;
+    /* Safari */
+    -webkit-backdrop-filter: blur(10px);
+    /* Other browsers */
     backdrop-filter: blur(10px);
     padding: 10px;
     border-radius: 24px;
-    border: 1px solid #ffffff89;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    font-family: 'Inter', sans-serif;
+    /* Safari */
+    -webkit-border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.537);
+    /* Multiple box-shadows for better effect */
+    -webkit-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #fff;
+    /* Smooth transitions */
+    -webkit-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    /* Better text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .controls-header {
@@ -38,10 +53,15 @@ canvas {
     margin: 0;
     width: auto;
     border-radius: 50%;
+    -webkit-border-radius: 50%;
+    display: -webkit-flex;
     display: flex;
+    -webkit-align-items: center;
     align-items: center;
+    -webkit-justify-content: center;
     justify-content: center;
-    transition: background-color 0.2s;
+    -webkit-transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease;
 }
 
 .close-btn:hover {
@@ -50,6 +70,9 @@ canvas {
 
 .close-btn i {
     font-size: 20px;
+    /* Better icon rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* Hidden file input */
@@ -70,13 +93,6 @@ canvas {
 
 .upload-btn:hover {
     background: #0056b3;
-}
-
-/* Status text */
-#status {
-    color: #666;
-    font-size: 14px;
-    margin-top: 5px;
 }
 
 /* Add Inter font-face */
@@ -129,7 +145,6 @@ canvas {
     left: 10px;
     margin-left: 10px;
 }
-
 
 .color-controls {
     display: flex;
@@ -212,37 +227,28 @@ button {
     justify-content: left;
 }
 
-
-
-
-#status {
-    color: #fff;
-    font-size: 14px;
-    margin-top: 15px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    background-color: #33333345;
-    border: 1px solid #ffffff33;
-    width: auto;
-    text-align: center;
-}
-
 .show-panel-hint {
     position: fixed;
-    top: 20px;
+    bottom: 20px;
     left: 20px;
-    background-color: rgba(0, 0, 0, 0.7);
+    /* Fallback for browsers that don't support backdrop-filter */
+    background-color: rgba(0, 0, 0, 0.85);
+    /* Safari */
+    -webkit-backdrop-filter: blur(10px);
+    /* Other browsers */
+    backdrop-filter: blur(10px);
     color: white;
     padding: 10px 20px;
     border-radius: 20px;
-    font-family: 'Inter', sans-serif;
+    -webkit-border-radius: 20px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     opacity: 0;
-    transition: opacity 0.3s;
+    -webkit-transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease;
     pointer-events: none;
+    /* Better text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .show-panel-hint.visible {
@@ -253,26 +259,73 @@ button {
     position: fixed;
     bottom: 20px;
     left: 20px;
-    background-color: #808080a2;
+    /* Fallback for browsers that don't support backdrop-filter */
+    background-color: #525252f2;
+    /* Safari */
+    -webkit-backdrop-filter: blur(10px);
+    /* Other browsers */
     backdrop-filter: blur(10px);
-    border: 1px solid #ffffff89;
+    border: 1px solid rgba(255, 255, 255, 0.537);
     color: white;
     width: 48px;
     height: 48px;
     border-radius: 50%;
+    -webkit-border-radius: 50%;
+    display: -webkit-flex;
     display: flex;
+    -webkit-align-items: center;
     align-items: center;
+    -webkit-justify-content: center;
     justify-content: center;
     cursor: pointer;
+    -webkit-transition: all 0.2s ease;
     transition: all 0.2s ease;
     padding: 0;
+    /* Better shadow */
+    -webkit-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    /* Better text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .show-controls-btn:hover {
-    background-color: #9c9c9ca2;
+    background-color: #626262f2;
+    -webkit-transform: scale(1.05);
     transform: scale(1.05);
 }
 
 .show-controls-btn i {
     font-size: 24px;
+}
+
+.stored-fonts {
+    margin: 10px 0;
+    width: 100%;
+    display: none;
+    /* Initially hidden until fonts are loaded */
+}
+
+.stored-fonts select {
+    width: 100%;
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: white;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+}
+
+.stored-fonts select:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.stored-fonts select option {
+    background-color: #525252;
+    color: white;
 }

@@ -27,18 +27,20 @@ let isSwapped = false;
 const originalGlyphProperties = new Map();
 
 // Add this near the top with other DOM queries
-const statusElement = document.getElementById('status');
-
-// Add near the top with other DOM queries
 const closeButton = document.getElementById('closeControls');
 const controlsPanel = document.querySelector('.controls');
 const showPanelHint = document.getElementById('showPanelHint');
 const showControlsBtn = document.getElementById('showControlsBtn');
 
-// Initially hide the status
-document.addEventListener('DOMContentLoaded', () => {
-    statusElement.classList.add('hidden');
-});
+// Add near the top with other initialization code
+let db;
+const DB_NAME = 'FontToolDB';
+const STORE_NAME = 'fonts';
+const DB_VERSION = 1;
+
+// Add near the top with other constants
+const LAST_FONT_KEY = 'lastUsedFont';
+const MAX_STORED_FONTS = 10;
 
 // ----------------- Utilities -------------------------------------------
 function resizeCanvas() {
@@ -71,81 +73,179 @@ function resetGlyphProperties() {
 }
 
 // --------------- Font loading ------------------------------------------
-function loadDefaultFont() {
-    const interURL = './Assets/Inter_28pt-Regular.ttf';
-    statusElement.textContent = 'Loading default font...';
-    statusElement.classList.remove('hidden');
+async function loadDefaultFont() {
+    try {
+        // First try to load the last used font
+        const lastFontLoaded = await loadLastUsedFont();
+        if (lastFontLoaded) {
+            animate(); // Start animation with the loaded font
+            return;
+        }
 
-    fetch(interURL)
-        .then(resp => resp.arrayBuffer())
-        .then(buf => {
-            try {
-                font = opentype.parse(buf);
-                storeOriginalGlyphProperties();
-                statusElement.textContent = 'Current font: Inter (default)';
-                animate();
-            } catch (e) {
-                console.error('Error parsing default Inter font:', e);
-                statusElement.textContent = 'Error loading default font';
-                setTimeout(() => statusElement.classList.add('hidden'), 3000);
-            }
-        })
-        .catch(err => {
-            console.error('Error fetching default Inter font:', err);
-            statusElement.textContent = 'Error loading default font';
-            setTimeout(() => statusElement.classList.add('hidden'), 3000);
-        });
+        // If no stored font, load Inter as default
+        const interURL = './Assets/Inter_28pt-Regular.ttf';
+
+        const response = await fetch(interURL);
+        const buffer = await response.arrayBuffer();
+        await processFontData(buffer, 'Inter (default)', false); // Don't store Inter as last used
+        animate(); // Start animation with default font
+    } catch (err) {
+        console.error('Error loading font:', err);
+    }
 }
 
-// Enhanced upload: use both opentype.js (ArrayBuffer) AND FontFace API
+// Initialize IndexedDB
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            db = request.result;
+            resolve(db);
+        };
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'name' });
+            }
+        };
+    });
+}
+
+// Store font in IndexedDB with limit management
+async function storeFont(file, arrayBuffer) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // First, check how many fonts we currently have
+            const existingFonts = await listStoredFonts();
+
+            // If we're at or over the limit, remove the oldest fonts
+            if (existingFonts.length >= MAX_STORED_FONTS) {
+                // Sort by timestamp (oldest first)
+                existingFonts.sort((a, b) => a.timestamp - b.timestamp);
+
+                // Remove oldest fonts until we're under the limit
+                const fontsToRemove = existingFonts.slice(0, existingFonts.length - MAX_STORED_FONTS + 1);
+
+                for (const fontToRemove of fontsToRemove) {
+                    await removeFont(fontToRemove.name);
+                    console.log(`Removed oldest font: ${fontToRemove.name}`);
+                }
+            }
+
+            // Now store the new font
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+
+            const fontData = {
+                name: file.name,
+                data: arrayBuffer,
+                timestamp: new Date().getTime()
+            };
+
+            const request = store.put(fontData);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
+// Load font from IndexedDB
+async function loadStoredFont(fontName) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.get(fontName);
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+// List stored fonts
+async function listStoredFonts() {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getAll();
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+// Process font data - only for canvas rendering, not UI fonts
+async function processFontData(arrayBuffer, fileName, shouldStoreAsLast = true) {
+    try {
+        const loadedFont = opentype.parse(arrayBuffer);
+        font = loadedFont;
+        storeOriginalGlyphProperties();
+
+        // Store as last used font
+        if (shouldStoreAsLast) {
+            localStorage.setItem(LAST_FONT_KEY, fileName);
+        }
+
+        // Note: We don't use FontFace API here since we only need the font for canvas rendering
+        // The UI font (Inter) stays the same
+    } catch (err) {
+        console.error('Error processing font:', err);
+        throw err;
+    }
+}
+
+// Load the last used font
+async function loadLastUsedFont() {
+    const lastFontName = localStorage.getItem(LAST_FONT_KEY);
+    if (lastFontName) {
+        try {
+            const fontData = await loadStoredFont(lastFontName);
+            if (fontData) {
+                await processFontData(fontData.data, fontData.name);
+                // Update the font selector if it exists
+                const fontSelect = document.getElementById('fontSelect');
+                if (fontSelect) {
+                    fontSelect.value = lastFontName;
+                }
+                return true;
+            }
+        } catch (err) {
+            console.warn('Could not load last used font:', err);
+            // Clear the invalid font from localStorage
+            localStorage.removeItem(LAST_FONT_KEY);
+        }
+    }
+    return false;
+}
+
+// Enhanced upload handler with font limit management
 const fileInput = document.getElementById('fontFile');
 fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Extension validation (.ttf .otf .woff)
     const allowedExt = /\.(ttf|otf|woff)$/i;
     if (!allowedExt.test(file.name)) {
-        statusElement.textContent = 'Unsupported file type. Please select a .ttf, .otf, or .woff font.';
-        statusElement.classList.remove('hidden');
-        setTimeout(() => statusElement.classList.add('hidden'), 3000);
+        console.warn('Unsupported file type:', file.name);
         return;
     }
 
-    // Show loading status for custom fonts
-    statusElement.textContent = 'Loading font…';
-    statusElement.classList.remove('hidden');
+    try {
+        const buffer = await file.arrayBuffer();
+        await processFontData(buffer, file.name);
+        await storeFont(file, buffer);
 
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-        try {
-            const buffer = ev.target.result;
-            const loadedFont = opentype.parse(buffer);
-            font = loadedFont;
-            storeOriginalGlyphProperties();
-            statusElement.textContent = `Current font: ${file.name}`;
-            // Keep status visible - no setTimeout to hide
+        // Refresh the font selector to reflect changes
+        await createFontSelector();
 
-            // ---- FontFace API (for DOM usage) ---------------
-            try {
-                const blobURL = URL.createObjectURL(file);
-                const family = file.name.replace(/\.[^/.]+$/, '');
-                const face = new FontFace(family, `url(${blobURL})`);
-                await face.load();
-                document.fonts.add(face);
-                document.documentElement.style.setProperty('--user-font', `"${family}", sans-serif`);
-                // Reclaim memory next frame
-                requestAnimationFrame(() => URL.revokeObjectURL(blobURL));
-            } catch (ffErr) {
-                console.warn('FontFace load failed:', ffErr);
-            }
-        } catch (err) {
-            statusElement.textContent = 'Error: ' + err.message;
-            setTimeout(() => statusElement.classList.add('hidden'), 3000); // Only hide on error
-            console.error(err);
-        }
-    };
-    reader.readAsArrayBuffer(file);
+        console.log(`Font stored: ${file.name}`);
+    } catch (err) {
+        console.error('Error processing font:', err);
+    }
 });
 
 // ---------------- Animation loop ---------------------------------------
@@ -454,5 +554,80 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Kick things off
-loadDefaultFont(); 
+// Create font selection UI - use existing HTML dropdown
+async function createFontSelector() {
+    const fonts = await listStoredFonts();
+    const select = document.getElementById('fontSelect');
+
+    if (!select) return; // Exit if dropdown doesn't exist
+
+    // Clear existing options except the first default one
+    while (select.children.length > 1) {
+        select.removeChild(select.lastChild);
+    }
+
+    // Add stored fonts as options
+    fonts.forEach(fontData => {
+        const option = document.createElement('option');
+        option.value = fontData.name;
+        option.textContent = fontData.name;
+        select.appendChild(option);
+    });
+
+    // Set the current selection
+    const lastFontName = localStorage.getItem(LAST_FONT_KEY);
+    if (lastFontName) {
+        select.value = lastFontName;
+    }
+
+    // Remove existing event listener to avoid duplicates
+    select.removeEventListener('change', handleFontChange);
+    select.addEventListener('change', handleFontChange);
+
+    // Show the dropdown container if we have fonts
+    const container = document.querySelector('.stored-fonts');
+    if (container) {
+        if (fonts.length > 0) {
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+        }
+    }
+}
+
+// Separate function for font change handling
+async function handleFontChange(e) {
+    if (!e.target.value) return;
+
+    try {
+        const fontData = await loadStoredFont(e.target.value);
+        await processFontData(fontData.data, fontData.name);
+    } catch (err) {
+        console.error('Error loading stored font:', err);
+    }
+}
+
+// Remove font from IndexedDB
+async function removeFont(fontName) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.delete(fontName);
+
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+    });
+}
+
+// Initialize database and UI
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await initDB();
+        await createFontSelector();
+        await loadDefaultFont();
+    } catch (err) {
+        console.error('Error initializing app:', err);
+        // Fallback: try to load default font anyway
+        loadDefaultFont();
+    }
+}); 
