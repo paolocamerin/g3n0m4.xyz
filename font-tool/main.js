@@ -26,6 +26,20 @@ let isSwapped = false;
 // Store original glyph properties to prevent cumulative edits
 const originalGlyphProperties = new Map();
 
+// Add this near the top with other DOM queries
+const statusElement = document.getElementById('status');
+
+// Add near the top with other DOM queries
+const closeButton = document.getElementById('closeControls');
+const controlsPanel = document.querySelector('.controls');
+const showPanelHint = document.getElementById('showPanelHint');
+const showControlsBtn = document.getElementById('showControlsBtn');
+
+// Initially hide the status
+document.addEventListener('DOMContentLoaded', () => {
+    statusElement.classList.add('hidden');
+});
+
 // ----------------- Utilities -------------------------------------------
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -58,20 +72,29 @@ function resetGlyphProperties() {
 
 // --------------- Font loading ------------------------------------------
 function loadDefaultFont() {
-    // Fetch Inter Regular TTF from CDN and parse
     const interURL = './Assets/Inter_28pt-Regular.ttf';
+    statusElement.textContent = 'Loading default font...';
+    statusElement.classList.remove('hidden');
+
     fetch(interURL)
         .then(resp => resp.arrayBuffer())
         .then(buf => {
             try {
                 font = opentype.parse(buf);
                 storeOriginalGlyphProperties();
+                statusElement.textContent = 'Current font: Inter (default)';
                 animate();
             } catch (e) {
                 console.error('Error parsing default Inter font:', e);
+                statusElement.textContent = 'Error loading default font';
+                setTimeout(() => statusElement.classList.add('hidden'), 3000);
             }
         })
-        .catch(err => console.error('Error fetching default Inter font:', err));
+        .catch(err => {
+            console.error('Error fetching default Inter font:', err);
+            statusElement.textContent = 'Error loading default font';
+            setTimeout(() => statusElement.classList.add('hidden'), 3000);
+        });
 }
 
 // Enhanced upload: use both opentype.js (ArrayBuffer) AND FontFace API
@@ -80,52 +103,46 @@ fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const statusLine = document.getElementById('status');
-
     // Extension validation (.ttf .otf .woff)
     const allowedExt = /\.(ttf|otf|woff)$/i;
     if (!allowedExt.test(file.name)) {
-        statusLine.textContent = 'Unsupported file type. Please select a .ttf, .otf, or .woff font.';
+        statusElement.textContent = 'Unsupported file type. Please select a .ttf, .otf, or .woff font.';
+        statusElement.classList.remove('hidden');
+        setTimeout(() => statusElement.classList.add('hidden'), 3000);
         return;
     }
 
-    statusLine.textContent = 'Loading font…';
+    // Show loading status for custom fonts
+    statusElement.textContent = 'Loading font…';
+    statusElement.classList.remove('hidden');
 
-    // 1. Read as ArrayBuffer for opentype.js
     const reader = new FileReader();
     reader.onload = async (ev) => {
-        const buffer = ev.target.result;
-
-        console.log('Reader result type:', Object.prototype.toString.call(buffer));
-        if (buffer instanceof ArrayBuffer) {
-            const sigBytes = new Uint8Array(buffer.slice(0, 4));
-            console.log('First 4 bytes:', sigBytes);
-            console.log('Signature as ASCII:', String.fromCharCode(...sigBytes));
-        }
-
-        // ---- opentype.js --------------------------------
         try {
+            const buffer = ev.target.result;
             const loadedFont = opentype.parse(buffer);
             font = loadedFont;
             storeOriginalGlyphProperties();
-            statusLine.textContent = `Font loaded: ${file.name}`;
-        } catch (err) {
-            statusLine.textContent = 'Error (opentype): ' + err.message;
-            console.error(err);
-        }
+            statusElement.textContent = `Current font: ${file.name}`;
+            // Keep status visible - no setTimeout to hide
 
-        // ---- FontFace API (for DOM usage) ---------------
-        try {
-            const blobURL = URL.createObjectURL(file);
-            const family = file.name.replace(/\.[^/.]+$/, '');
-            const face = new FontFace(family, `url(${blobURL})`);
-            await face.load();
-            document.fonts.add(face);
-            document.documentElement.style.setProperty('--user-font', `"${family}", sans-serif`);
-            // Reclaim memory next frame
-            requestAnimationFrame(() => URL.revokeObjectURL(blobURL));
-        } catch (ffErr) {
-            console.warn('FontFace load failed:', ffErr);
+            // ---- FontFace API (for DOM usage) ---------------
+            try {
+                const blobURL = URL.createObjectURL(file);
+                const family = file.name.replace(/\.[^/.]+$/, '');
+                const face = new FontFace(family, `url(${blobURL})`);
+                await face.load();
+                document.fonts.add(face);
+                document.documentElement.style.setProperty('--user-font', `"${family}", sans-serif`);
+                // Reclaim memory next frame
+                requestAnimationFrame(() => URL.revokeObjectURL(blobURL));
+            } catch (ffErr) {
+                console.warn('FontFace load failed:', ffErr);
+            }
+        } catch (err) {
+            statusElement.textContent = 'Error: ' + err.message;
+            setTimeout(() => statusElement.classList.add('hidden'), 3000); // Only hide on error
+            console.error(err);
         }
     };
     reader.readAsArrayBuffer(file);
@@ -156,8 +173,8 @@ function draw() {
     ctx.fillStyle = currentBg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const panelBottom = document.querySelector('.controls').getBoundingClientRect().bottom;
-    baseY = panelBottom + fontSize;
+
+    baseY = fontSize;
 
     resetGlyphProperties();
 
@@ -407,6 +424,35 @@ function syncPickers() {
     fillPickr.setColor(fillColor);
     bgPickr.setColor(bgColor);
 }
+
+// Function to show the panel
+function showPanel() {
+    controlsPanel.classList.remove('hidden');
+    showPanelHint.classList.remove('visible');
+    showControlsBtn.classList.add('hidden');
+}
+
+// Function to hide the panel
+function hidePanel() {
+    controlsPanel.classList.add('hidden');
+    showControlsBtn.classList.remove('hidden');
+    // Show the hint briefly
+    showPanelHint.classList.add('visible');
+    setTimeout(() => {
+        showPanelHint.classList.remove('visible');
+    }, 2000);
+}
+
+// Add the click handlers
+closeButton.addEventListener('click', hidePanel);
+showControlsBtn.addEventListener('click', showPanel);
+
+// Add a way to show the panel again (e.g., pressing 'c')
+document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'c') {
+        showPanel();
+    }
+});
 
 // Kick things off
 loadDefaultFont(); 

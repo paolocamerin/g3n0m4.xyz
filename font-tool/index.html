@@ -11,15 +11,21 @@
     <!-- Pickr assets -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 
 <body>
     <div class="controls">
+        <div class="controls-header">
+            <button class="close-btn" id="closeControls" title="Close panel (press 'C' to show again)">
+                <i class="ph ph-x"></i>
+            </button>
+        </div>
         <button class="upload-btn" onclick="document.getElementById('fontFile').click()">Choose Font</button>
         <input type="file" id="fontFile" accept=".ttf,.otf,.woff">
-        <div id="status"></div>
-        <div class="color-controls"
-            style="margin-top:10px; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
+        <div class="hidden" id="status"></div>
+        <div class="color-controls">
 
             <div id="fillPicker" class="color-swatch"></div>
             <label style="margin-right:10px;">Color 1</label>
@@ -80,7 +86,13 @@
 
     </div>
 
+    <div id="showPanelHint" class="show-panel-hint hidden">
+        Press 'C' to show controls
     </div>
+
+    <button id="showControlsBtn" class="show-controls-btn hidden" title="Show controls panel">
+        <i class="ph ph-sidebar"></i>
+    </button>
 
     <canvas id="canvas"></canvas>
 
