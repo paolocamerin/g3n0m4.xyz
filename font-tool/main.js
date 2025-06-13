@@ -236,22 +236,35 @@ function draw() {
     });
 }
 
+// -------------------- NEW: utility to force a redraw when paused --------------------
+function requestRender() {
+    if (isPaused) {
+        draw();
+    }
+}
+
 // ---------------- UI bindings ------------------------------------------
-document.getElementById('kerningSlider').addEventListener('input', e => kerningFactor = parseFloat(e.target.value));
+document.getElementById('kerningSlider').addEventListener('input', e => {
+    kerningFactor = parseFloat(e.target.value);
+    requestRender();
+});
 
 document.getElementById('textInput').addEventListener('input', e => {
     displayText = e.target.value;
     storeOriginalGlyphProperties();
+    requestRender();
 });
 
 document.getElementById('fontSizeSlider').addEventListener('input', e => {
     fontSize = parseInt(e.target.value);
     document.getElementById('fontSizeValue').textContent = fontSize;
+    requestRender();
 });
 
 document.getElementById('phaseSpeedSlider').addEventListener('input', e => {
     phaseSpeed = parseFloat(e.target.value);
     document.getElementById('phaseSpeedValue').textContent = phaseSpeed.toFixed(3);
+    requestRender();
 });
 
 // document.getElementById('togglePoints').addEventListener('change', e => {
@@ -265,20 +278,24 @@ document.getElementById('togglePause').addEventListener('click', () => {
 document.getElementById('scaleSlider').addEventListener('input', e => {
     scaleFactor = parseFloat(e.target.value);
     document.getElementById('scaleValue').textContent = scaleFactor.toFixed(2);
+    requestRender();
 });
 
 document.getElementById('waveScale').addEventListener('change', e => {
     useWaveScale = e.target.checked;
+    requestRender();
 });
 
 document.getElementById('waveFrequencySlider').addEventListener('input', e => {
     waveFrequency = parseFloat(e.target.value);
     document.getElementById('waveFrequencyValue').textContent = waveFrequency.toFixed(4);
+    requestRender();
 });
 
 document.getElementById('swapColors').addEventListener('change', e => {
     isSwapped = !isSwapped;
     syncPickers();
+    requestRender();
 });
 
 // Export SVG (unchanged)
@@ -376,11 +393,13 @@ const bgPickr = Pickr.create({
 fillPickr.on('change', (c) => {
     fillColor = c.toHEXA().toString();
     syncPickers();
+    requestRender();
 });
 
 bgPickr.on('change', (c) => {
     bgColor = c.toHEXA().toString();
     syncPickers();
+    requestRender();
 });
 
 // keep pickers in sync when swapped
