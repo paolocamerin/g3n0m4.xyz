@@ -7,14 +7,15 @@ let displayText = document.getElementById('textInput').value;
 let fontSize = parseInt(document.getElementById('fontSizeSlider').value);
 let kerningFactor = parseFloat(document.getElementById('kerningSlider').value);
 let phaseSpeed = parseFloat(document.getElementById('phaseSpeedSlider').value);
+let phase = parseFloat(document.getElementById('phaseSlider').value);
 let waveFrequency = parseFloat(document.getElementById('waveFrequencySlider').value);
+let waveAmplitude = parseFloat(document.getElementById('waveAmplitudeSlider').value);
 let scaleFactor = parseFloat(document.getElementById('scaleSlider').value);
 let useWaveScale = document.getElementById('waveScale').checked;
 //let showControlPoints = document.getElementById('togglePoints').checked;
 
 let isPaused = false;
 let animationPhase = 0;
-let waveAmplitude = 400;   // px
 let baseX = 50;
 let baseY = 0;
 
@@ -292,7 +293,10 @@ function draw() {
         const glyph = font.charToGlyph(ch);
 
         const normalized = (pos - baseX) / fontSize;
-        const waveEffect = Math.sin(normalized * waveFrequency + animationPhase) * waveAmplitude * kerningFactor;
+        // Separate wave effect from kerning - wave amplitude is independent
+        const waveEffect = Math.sin(normalized * waveFrequency + animationPhase + phase) * waveAmplitude;
+        // Kerning affects letter spacing directly
+        const kerningAdjustment = kerningFactor * fontSize;
 
         const path = font.getPath(ch, currentX, baseY, fontSize);
         const bounds = path.getBoundingBox();
@@ -301,7 +305,7 @@ function draw() {
 
         let finalScale = scaleFactor;
         if (useWaveScale) {
-            finalScale *= Math.sin(normalized * waveFrequency + animationPhase) * 0.5 + 1;
+            finalScale *= Math.sin(normalized * waveFrequency + animationPhase + phase) * 0.5 + 1;
         }
 
         ctx.save();
@@ -349,7 +353,8 @@ function draw() {
 
         ctx.restore();
 
-        currentX += glyph.advanceWidth * (fontSize / font.unitsPerEm) + waveEffect;
+        // Apply both wave effect and kerning to character positioning
+        currentX += glyph.advanceWidth * (fontSize / font.unitsPerEm) + waveEffect + kerningAdjustment;
     });
 }
 
@@ -384,6 +389,12 @@ document.getElementById('phaseSpeedSlider').addEventListener('input', e => {
     requestRender();
 });
 
+document.getElementById('phaseSlider').addEventListener('input', e => {
+    phase = parseFloat(e.target.value);
+    document.getElementById('phaseValue').textContent = phase.toFixed(3);
+    requestRender();
+});
+
 // document.getElementById('togglePoints').addEventListener('change', e => {
 //     showControlPoints = e.target.checked;
 // });
@@ -406,6 +417,12 @@ document.getElementById('waveScale').addEventListener('change', e => {
 document.getElementById('waveFrequencySlider').addEventListener('input', e => {
     waveFrequency = parseFloat(e.target.value);
     document.getElementById('waveFrequencyValue').textContent = waveFrequency.toFixed(4);
+    requestRender();
+});
+
+document.getElementById('waveAmplitudeSlider').addEventListener('input', e => {
+    waveAmplitude = parseFloat(e.target.value);
+    document.getElementById('waveAmplitudeValue').textContent = waveAmplitude;
     requestRender();
 });
 
@@ -442,7 +459,7 @@ function exportToSVG() {
         const ch = displayText[i];
         const glyph = font.charToGlyph(ch);
         const normalized = (pos - baseX) / fontSize;
-        const waveEffect = Math.sin(normalized * waveFrequency + animationPhase) * waveAmplitude * kerningFactor;
+        const waveEffect = Math.sin(normalized * waveFrequency + animationPhase + phase) * waveAmplitude;
 
         const path = font.getPath(ch, currentX, baseY, fontSize);
         const bounds = path.getBoundingBox();
@@ -450,7 +467,7 @@ function exportToSVG() {
         const cy = baseY - (bounds.y2 - bounds.y1) / 2;
 
         let finalScale = scaleFactor;
-        if (useWaveScale) finalScale *= Math.sin(normalized * waveFrequency + animationPhase) * 0.5 + 1;
+        if (useWaveScale) finalScale *= Math.sin(normalized * waveFrequency + animationPhase + phase) * 0.5 + 1;
 
         const svgPath = document.createElementNS(svgNS, 'path');
         const d = path.commands.map(cmd => {
