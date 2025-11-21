@@ -41,11 +41,13 @@ jobs:
       
       - name: Prepare deployment
         run: |
-          # Create deployment directory with root site files
+          # Create deployment directory
           mkdir -p deploy
-          # Copy root site files (excluding hat-app source)
+          # Copy all root site files (main site)
           cp -r index.html styles.css Assets scripts sitemap.xml CNAME deploy/ 2>/dev/null || true
-          # Copy built hat-app to hat-app subdirectory
+          # Copy font-tool if it exists
+          [ -d font-tool ] && cp -r font-tool deploy/ 2>/dev/null || true
+          # Copy built hat-app to hat-app subdirectory (only the built files)
           mkdir -p deploy/hat-app
           cp -r hat-app/dist/* deploy/hat-app/
       
