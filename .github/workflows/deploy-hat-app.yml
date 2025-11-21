@@ -46,6 +46,8 @@ jobs:
         run: |
           # Create deployment directory
           mkdir -p deploy
+          # Add .nojekyll to prevent Jekyll processing
+          touch deploy/.nojekyll
           # Copy all root site files (main site)
           cp -r index.html styles.css Assets scripts sitemap.xml CNAME deploy/ 2>/dev/null || true
           # Copy font-tool if it exists
