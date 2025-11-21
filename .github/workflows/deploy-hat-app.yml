@@ -50,9 +50,31 @@ jobs:
           cp -r index.html styles.css Assets scripts sitemap.xml CNAME deploy/ 2>/dev/null || true
           # Copy font-tool if it exists
           [ -d font-tool ] && cp -r font-tool deploy/ 2>/dev/null || true
-          # Copy built hat-app to hat-app subdirectory (only the built files)
+          # Copy built hat-app to hat-app subdirectory (ONLY the built files from dist)
           mkdir -p deploy/hat-app
+          # Remove any existing files first to ensure clean deployment
+          rm -rf deploy/hat-app/*
+          # Copy ONLY the dist folder contents (built files)
           cp -r hat-app/dist/* deploy/hat-app/
+          # Verify the built index.html is there and contains correct paths
+          echo "=== Verifying deployed index.html ==="
+          if grep -q "/src/main.jsx" deploy/hat-app/index.html; then
+            echo "ERROR: Source index.html detected! Should only have /hat-app/assets/ paths"
+            cat deploy/hat-app/index.html
+            exit 1
+          fi
+          if ! grep -q "/hat-app/assets/" deploy/hat-app/index.html; then
+            echo "ERROR: Built index.html missing correct asset paths!"
+            cat deploy/hat-app/index.html
+            exit 1
+          fi
+          echo "✅ Verified: Built index.html is correct"
+          # Ensure no source files are accidentally included
+          if [ -d deploy/hat-app/src ] || [ -f deploy/hat-app/src/main.jsx ]; then
+            echo "ERROR: Source files found in deployment!"
+            exit 1
+          fi
+          echo "✅ Verified: No source files in deployment"
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
