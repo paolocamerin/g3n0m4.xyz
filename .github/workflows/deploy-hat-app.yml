@@ -54,21 +54,34 @@ jobs:
           mkdir -p deploy/hat-app
           # Remove any existing files first to ensure clean deployment
           rm -rf deploy/hat-app/*
+          # Verify dist folder exists and has files
+          if [ ! -d "hat-app/dist" ] || [ -z "$(ls -A hat-app/dist)" ]; then
+            echo "ERROR: hat-app/dist folder is empty or doesn't exist!"
+            exit 1
+          fi
           # Copy ONLY the dist folder contents (built files)
           cp -r hat-app/dist/* deploy/hat-app/
           # Verify the built index.html is there and contains correct paths
           echo "=== Verifying deployed index.html ==="
+          if [ ! -f "deploy/hat-app/index.html" ]; then
+            echo "ERROR: index.html not found in deployment!"
+            exit 1
+          fi
           if grep -q "/src/main.jsx" deploy/hat-app/index.html; then
             echo "ERROR: Source index.html detected! Should only have /hat-app/assets/ paths"
+            echo "Contents of deployed index.html:"
             cat deploy/hat-app/index.html
             exit 1
           fi
           if ! grep -q "/hat-app/assets/" deploy/hat-app/index.html; then
             echo "ERROR: Built index.html missing correct asset paths!"
+            echo "Contents of deployed index.html:"
             cat deploy/hat-app/index.html
             exit 1
           fi
           echo "✅ Verified: Built index.html is correct"
+          echo "Deployed index.html contents:"
+          cat deploy/hat-app/index.html
           # Ensure no source files are accidentally included
           if [ -d deploy/hat-app/src ] || [ -f deploy/hat-app/src/main.jsx ]; then
             echo "ERROR: Source files found in deployment!"
