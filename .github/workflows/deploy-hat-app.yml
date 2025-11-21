@@ -1,0 +1,61 @@
+name: Deploy Hat App to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'hat-app/**'
+      - '.github/workflows/deploy-hat-app.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: hat-app/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./hat-app
+        run: npm ci
+      
+      - name: Build hat-app
+        working-directory: ./hat-app
+        run: npm run build
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Prepare deployment
+        run: |
+          # Create deployment directory with root site files
+          mkdir -p deploy
+          # Copy root site files (excluding hat-app source)
+          cp -r index.html styles.css Assets scripts sitemap.xml CNAME deploy/ 2>/dev/null || true
+          # Copy built hat-app to hat-app subdirectory
+          mkdir -p deploy/hat-app
+          cp -r hat-app/dist/* deploy/hat-app/
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: deploy
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+
