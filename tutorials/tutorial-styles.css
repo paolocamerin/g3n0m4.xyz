@@ -1,0 +1,284 @@
+/* Tutorial Page Styles */
+
+.tutorial-main {
+    min-height: 100vh;
+    padding: var(--spacing-large) var(--spacing-small);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.tutorial-container {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.tutorial-header {
+    text-align: center;
+    margin-bottom: var(--spacing-medium);
+    padding: var(--spacing-large);
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    backdrop-filter: blur(24px) contrast(1.1);
+    -webkit-backdrop-filter: blur(24px) contrast(1.1);
+    border: solid 2px rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.tutorial-subtitle {
+    font-size: 0.2em;
+    color: var(--secondary-color);
+    margin: 0;
+    font-weight: 200;
+}
+.tutorial-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E");
+    border-radius: 20px;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+}
+
+.tutorial-title {
+    font-size: 2.5em;
+    margin: 0 0 1rem 0;
+    font-weight: 700;
+}
+
+.tutorial-subtitle {
+    font-size: 1.2em;
+    color: var(--secondary-color);
+    margin: 0;
+    font-weight: 300;
+}
+
+/* Hero Image Section */
+.hero-image-section {
+    margin-bottom: var(--spacing-medium);
+    text-align: center;
+}
+
+.hero-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 20px;
+    border: solid 2px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    object-fit: contain;
+    margin-bottom: 1rem;
+}
+
+/* Hero Tags Section */
+.hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: left;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* Credit Chip / Tag */
+.credit-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.credit-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--primary-color);
+    font-size: 0.9em;
+    font-weight: 400;
+    transition: all 0.3s ease;
+}
+
+.credit-link:hover {
+    opacity: 0.8;
+    transform: translateY(-1px);
+}
+
+.instagram-icon {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+.credit-link span {
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.tutorial-content {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    backdrop-filter: blur(24px) contrast(1.1);
+    -webkit-backdrop-filter: blur(24px) contrast(1.1);
+    border: solid 2px rgba(255, 255, 255, 0.1);
+    padding: var(--spacing-large);
+    position: relative;
+}
+
+.tutorial-content::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E");
+    border-radius: 20px;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+}
+
+.tutorial-section {
+    margin-bottom: 2rem;
+}
+
+.tutorial-section h2 {
+    font-size: 1.8em;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.tutorial-section p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+/* Assets Section */
+.assets-section {
+   
+    padding-top: 1rem;
+    
+}
+
+.assets-description {
+    margin-bottom: 1.5rem;
+    color: var(--secondary-color);
+}
+
+.assets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.asset-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: var(--primary-color);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.asset-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.asset-button:active {
+    transform: translateY(0);
+}
+
+.asset-icon {
+    font-size: 2em;
+    margin-bottom: 0.5rem;
+}
+
+.asset-name {
+    font-size: 0.9em;
+    text-align: center;
+    word-break: break-word;
+}
+
+.asset-size {
+    font-size: 0.75em;
+    color: var(--secondary-color);
+    margin-top: 0.25rem;
+}
+
+/* Tutorial Footer */
+.tutorial-footer {
+    margin-top: var(--spacing-large);
+    text-align: center;
+    padding: var(--spacing-small);
+}
+
+.copyright {
+    font-size: 0.9em;
+    color: var(--secondary-color);
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .tutorial-main {
+        padding: var(--spacing-small);
+    }
+
+    .tutorial-title {
+        font-size: 2em;
+    }
+
+    .tutorial-subtitle {
+        font-size: 1em;
+    }
+
+    .tutorial-content {
+        padding: var(--spacing-small);
+    }
+
+    .assets-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-image {
+        border-radius: 12px;
+    }
+
+    .hero-tags {
+        gap: 0.5rem;
+    }
+
+    .credit-chip {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85em;
+    }
+
+    .instagram-icon {
+        width: 14px;
+        height: 14px;
+    }
+}

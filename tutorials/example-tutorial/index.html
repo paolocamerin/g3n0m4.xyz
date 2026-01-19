@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example Tutorial - Paolo Camerin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../tutorial-styles.css">
+    <meta name="description" content="Example tutorial demonstrating the tutorial structure - Learn from Paolo Camerin" />
+</head>
+
+<body>
+    <main class="tutorial-main">
+        <div class="tutorial-container">
+            <header class="tutorial-header">
+                <h1 class="tutorial-title">Example Tutorial</h1>
+                <p class="tutorial-subtitle">This is an example tutorial to demonstrate the structure</p>
+            </header>
+
+            <!-- Hero Image Section (optional - remove if not needed) -->
+            <!-- <div class="hero-image-section">
+                <img src="assets/hero-image.png" alt="Tutorial hero image" class="hero-image">
+            </div> -->
+
+            <div class="tutorial-content">
+                <section class="tutorial-section">
+                    <h2>Introduction</h2>
+                    <p>This is an example tutorial page. You can customize this content with your own tutorial information, code examples, images, and more.</p>
+                    <p>To create a new tutorial, simply:</p>
+                    <ol style="line-height: 1.8; padding-left: 1.5rem;">
+                        <li>Create a new folder in the <code>tutorials/</code> directory</li>
+                        <li>Copy this <code>index.html</code> file and customize it</li>
+                        <li>Create an <code>assets/</code> folder inside your tutorial folder</li>
+                        <li>Update the <code>tutorial-script.js</code> file with your assets</li>
+                        <li>Add your asset files to the <code>assets/</code> folder</li>
+                    </ol>
+                </section>
+
+                <section class="assets-section">
+                    <h2>Download Assets</h2>
+                    <p class="assets-description">Click the buttons below to download the assets for this tutorial:</p>
+                    <div class="assets-grid" id="assetsContainer">
+                        <!-- Assets will be dynamically added here -->
+                    </div>
+                </section>
+            </div>
+
+            <footer class="tutorial-footer">
+                <p class="copyright">© <script>document.write(new Date().getFullYear())</script> Paolo Camerin</p>
+            </footer>
+        </div>
+    </main>
+
+    <script src="../tutorial-script.js"></script>
+    <script>
+        // Override assets for this specific tutorial
+        const assets = [
+            {
+                name: "Tutorial Assets",
+                path: "assets/tutorial-assets.zip",
+                size: "2.5 MB",
+                icon: "📦"
+            },
+            {
+                name: "Source Files",
+                path: "assets/source-files.zip",
+                size: "1.8 MB",
+                icon: "📁"
+            }
+        ];
+        
+        // Render assets when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('assetsContainer');
+            if (!container) return;
+            
+            if (assets.length === 0) {
+                container.innerHTML = '<p style="color: var(--secondary-color);">No assets available for this tutorial.</p>';
+                return;
+            }
+            
+            container.innerHTML = assets.map(asset => {
+                return `
+                    <a href="${asset.path}" download class="asset-button">
+                        <span class="asset-icon">${asset.icon}</span>
+                        <span class="asset-name">${asset.name}</span>
+                        <span class="asset-size">${asset.size}</span>
+                    </a>
+                `;
+            }).join('');
+        });
+    </script>
+</body>
+
+</html>
