@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'hat-app/**'
+      - 'tutorials/**'
       - '.github/workflows/deploy-hat-app.yml'
   workflow_dispatch:
 
@@ -50,8 +51,8 @@ jobs:
           touch deploy/.nojekyll
           # Copy all root site files (main site)
           cp -r index.html styles.css Assets scripts sitemap.xml CNAME deploy/ 2>/dev/null || true
-          # Copy font-tool if it exists
-          [ -d font-tool ] && cp -r font-tool deploy/ 2>/dev/null || true
+          # Copy tutorials if it exists
+          [ -d tutorials ] && cp -r tutorials deploy/ 2>/dev/null || true
           # Copy built hat-app to hat-app subdirectory (ONLY the built files from dist)
           mkdir -p deploy/hat-app
           # Remove any existing files first to ensure clean deployment

@@ -4,13 +4,19 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
-
 
 <url>
   <loc>https://g3n0m4.xyz/</loc>
-  <lastmod>2025-03-20T17:02:14+00:00</lastmod>
+  <lastmod>2026-01-19T20:02:18+00:00</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>1.0</priority>
 </url>
 
+<url>
+  <loc>https://g3n0m4.xyz/tutorials/06-holographic-card/</loc>
+  <lastmod>2026-01-19T20:02:18+00:00</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
+</url>
 
 </urlset>
