@@ -5,13 +5,18 @@ on:
     branches:
       - main
     paths:
-      - 'hat-app/**'
+      - 'index.html'
+      - 'styles.css'
+      - 'Assets/**'
+      - 'scripts/**'
       - 'tutorials/**'
+      - 'favicon.svg'
+      - 'sitemap.xml'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -25,21 +30,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: hat-app/package-lock.json
-      
-      - name: Install dependencies
-        working-directory: ./hat-app
-        run: npm ci
-      
-      - name: Build hat-app
-        working-directory: ./hat-app
-        run: npm run build
-      
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
@@ -49,50 +39,18 @@ jobs:
           mkdir -p deploy
           # Add .nojekyll to prevent Jekyll processing
           touch deploy/.nojekyll
-          # Copy all root site files (main site)
-          cp -r index.html styles.css Assets scripts sitemap.xml CNAME deploy/ 2>/dev/null || true
+          # Copy all root site files
+          cp index.html styles.css sitemap.xml CNAME deploy/ 2>/dev/null || true
           # Copy favicon
           cp favicon.svg deploy/ 2>/dev/null || true
-          # Copy tutorials if it exists
+          # Copy Assets folder
+          [ -d Assets ] && cp -r Assets deploy/ 2>/dev/null || true
+          # Copy scripts folder
+          [ -d scripts ] && cp -r scripts deploy/ 2>/dev/null || true
+          # Copy tutorials folder
           [ -d tutorials ] && cp -r tutorials deploy/ 2>/dev/null || true
-          # Copy built hat-app to hat-app subdirectory (ONLY the built files from dist)
-          mkdir -p deploy/hat-app
-          # Remove any existing files first to ensure clean deployment
-          rm -rf deploy/hat-app/*
-          # Verify dist folder exists and has files
-          if [ ! -d "hat-app/dist" ] || [ -z "$(ls -A hat-app/dist)" ]; then
-            echo "ERROR: hat-app/dist folder is empty or doesn't exist!"
-            exit 1
-          fi
-          # Copy ONLY the dist folder contents (built files)
-          cp -r hat-app/dist/* deploy/hat-app/
-          # Verify the built index.html is there and contains correct paths
-          echo "=== Verifying deployed index.html ==="
-          if [ ! -f "deploy/hat-app/index.html" ]; then
-            echo "ERROR: index.html not found in deployment!"
-            exit 1
-          fi
-          if grep -q "/src/main.jsx" deploy/hat-app/index.html; then
-            echo "ERROR: Source index.html detected! Should only have /hat-app/assets/ paths"
-            echo "Contents of deployed index.html:"
-            cat deploy/hat-app/index.html
-            exit 1
-          fi
-          if ! grep -q "/hat-app/assets/" deploy/hat-app/index.html; then
-            echo "ERROR: Built index.html missing correct asset paths!"
-            echo "Contents of deployed index.html:"
-            cat deploy/hat-app/index.html
-            exit 1
-          fi
-          echo "✅ Verified: Built index.html is correct"
-          echo "Deployed index.html contents:"
-          cat deploy/hat-app/index.html
-          # Ensure no source files are accidentally included
-          if [ -d deploy/hat-app/src ] || [ -f deploy/hat-app/src/main.jsx ]; then
-            echo "ERROR: Source files found in deployment!"
-            exit 1
-          fi
-          echo "✅ Verified: No source files in deployment"
+          echo "✅ Deployment prepared"
+          ls -la deploy/
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
