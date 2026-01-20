@@ -159,6 +159,24 @@ a:hover {
     opacity: 0.7;
 }
 
+/* Focus styles for keyboard navigation */
+a:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
 .footer {
     position: fixed;
     bottom: .5rem;
@@ -170,7 +188,7 @@ a:hover {
 
 .coming-soon {
     font-size: 0.5em;
-    color: --secondary-color;
+    color: var(--secondary-color);
     margin-top: 2rem;
     font-weight: 300;
 }

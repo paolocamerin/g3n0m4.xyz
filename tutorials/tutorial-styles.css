@@ -26,12 +26,6 @@
     position: relative;
 }
 
-.tutorial-subtitle {
-    font-size: 0.2em;
-    color: var(--secondary-color);
-    margin: 0;
-    font-weight: 200;
-}
 .tutorial-header::before {
     content: "";
     position: absolute;
@@ -282,5 +276,24 @@
     .instagram-icon {
         width: 14px;
         height: 14px;
+    }
+}
+
+/* Focus styles for keyboard navigation */
+a:focus-visible,
+button:focus-visible,
+.asset-button:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

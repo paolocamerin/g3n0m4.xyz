@@ -34,32 +34,50 @@ function getTutorialDir() {
     return null;
 }
 
-// Render assets
+// Render assets using safe DOM methods (prevents XSS)
 function renderAssets() {
     const container = document.getElementById('assetsContainer');
     if (!container) return;
 
     const tutorialDir = getTutorialDir();
     
+    // Clear container safely
+    container.textContent = '';
+    
     if (assets.length === 0) {
-        container.innerHTML = '<p style="color: var(--secondary-color);">No assets available for this tutorial.</p>';
+        const msg = document.createElement('p');
+        msg.style.color = 'var(--secondary-color)';
+        msg.textContent = 'No assets available for this tutorial.';
+        container.appendChild(msg);
         return;
     }
 
-    container.innerHTML = assets.map(asset => {
+    assets.forEach(asset => {
         // Construct the correct path relative to the tutorial directory
         const assetPath = tutorialDir 
             ? `./${tutorialDir}/${asset.path}`
             : asset.path;
         
-        return `
-            <a href="${assetPath}" download class="asset-button">
-                <span class="asset-icon">${asset.icon}</span>
-                <span class="asset-name">${asset.name}</span>
-                <span class="asset-size">${asset.size}</span>
-            </a>
-        `;
-    }).join('');
+        const link = document.createElement('a');
+        link.href = assetPath;
+        link.download = '';
+        link.className = 'asset-button';
+        
+        const icon = document.createElement('span');
+        icon.className = 'asset-icon';
+        icon.textContent = asset.icon;
+        
+        const name = document.createElement('span');
+        name.className = 'asset-name';
+        name.textContent = asset.name;
+        
+        const size = document.createElement('span');
+        size.className = 'asset-size';
+        size.textContent = asset.size;
+        
+        link.append(icon, name, size);
+        container.appendChild(link);
+    });
 }
 
 // Initialize when DOM is loaded

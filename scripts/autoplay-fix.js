@@ -3,13 +3,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     videos.forEach(video => {
         // Try to play video after page load
-        video.play().catch(error => {
-            console.log('Autoplay was prevented', error);
-
-            // Add click listener as fallback
+        video.play().catch(() => {
+            // Autoplay was prevented, add click listener as fallback
             document.body.addEventListener('click', () => {
                 video.play();
             }, { once: true });
         });
     });
-}); 
+});

@@ -73,25 +73,43 @@
             }
         ];
         
-        // Render assets when DOM is loaded
+        // Render assets using safe DOM methods (prevents XSS)
         document.addEventListener('DOMContentLoaded', function() {
             const container = document.getElementById('assetsContainer');
             if (!container) return;
             
+            // Clear container safely
+            container.textContent = '';
+            
             if (assets.length === 0) {
-                container.innerHTML = '<p style="color: var(--secondary-color);">No assets available for this tutorial.</p>';
+                const msg = document.createElement('p');
+                msg.style.color = 'var(--secondary-color)';
+                msg.textContent = 'No assets available for this tutorial.';
+                container.appendChild(msg);
                 return;
             }
             
-            container.innerHTML = assets.map(asset => {
-                return `
-                    <a href="${asset.path}" download class="asset-button">
-                        <span class="asset-icon">${asset.icon}</span>
-                        <span class="asset-name">${asset.name}</span>
-                        <span class="asset-size">${asset.size}</span>
-                    </a>
-                `;
-            }).join('');
+            assets.forEach(asset => {
+                const link = document.createElement('a');
+                link.href = asset.path;
+                link.download = '';
+                link.className = 'asset-button';
+                
+                const icon = document.createElement('span');
+                icon.className = 'asset-icon';
+                icon.textContent = asset.icon;
+                
+                const name = document.createElement('span');
+                name.className = 'asset-name';
+                name.textContent = asset.name;
+                
+                const size = document.createElement('span');
+                size.className = 'asset-size';
+                size.textContent = asset.size;
+                
+                link.append(icon, name, size);
+                container.appendChild(link);
+            });
         });
     </script>
 </body>

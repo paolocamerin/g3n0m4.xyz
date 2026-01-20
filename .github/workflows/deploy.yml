@@ -1,4 +1,4 @@
-name: Deploy Hat App to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     paths:
       - 'hat-app/**'
       - 'tutorials/**'
-      - '.github/workflows/deploy-hat-app.yml'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 jobs:
@@ -51,6 +51,8 @@ jobs:
           touch deploy/.nojekyll
           # Copy all root site files (main site)
           cp -r index.html styles.css Assets scripts sitemap.xml CNAME deploy/ 2>/dev/null || true
+          # Copy favicon
+          cp favicon.svg deploy/ 2>/dev/null || true
           # Copy tutorials if it exists
           [ -d tutorials ] && cp -r tutorials deploy/ 2>/dev/null || true
           # Copy built hat-app to hat-app subdirectory (ONLY the built files from dist)
@@ -100,5 +102,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-
