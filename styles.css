@@ -193,6 +193,22 @@ button:focus-visible {
     font-weight: 300;
 }
 
+.hat-app-link {
+    font-size: 0.5em;
+    color: var(--secondary-color);
+    margin-top: 0.5rem;
+    font-weight: 300;
+}
+
+.hat-app-link a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.hat-app-link a:hover {
+    opacity: 0.8;
+}
+
 video {
     width: 100%;
 }

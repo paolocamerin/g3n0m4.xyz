@@ -32,6 +32,7 @@
                     artist</a> & Interaction designer.
             </h1>
             <div class="coming-soon">...more to come soon</div>
+            <p class="hat-app-link" id="debug-hat-app-link" data-hide-on="g3n0m4.xyz"><a href="./hat-app/">AR Hat App</a> — try the camera demo.</p>
         </div>
         <div class="video-gallery" aria-hidden="true">
             <div class="video-card">
@@ -51,6 +52,14 @@
         <script>document.write(new Date().getFullYear())</script>
     </footer>
     <script src="./scripts/autoplay-fix.js"></script>
+    <script>
+      (function () {
+        var el = document.getElementById('debug-hat-app-link');
+        if (el && el.getAttribute('data-hide-on') && location.hostname.endsWith(el.getAttribute('data-hide-on'))) {
+          el.hidden = true;
+        }
+      })();
+    </script>
 </body>
 
 </html>
