@@ -4,7 +4,9 @@
   "description": "Personal website and tutorials",
   "scripts": {
     "build:tutorials": "node scripts/generate-tutorials.js",
-    "build": "npm run build:tutorials"
+    "build": "npm run build:tutorials",
+    "hat-app:dev": "cd hat-app && npm run dev",
+    "hat-app:build": "cd hat-app && npm run build"
   },
   "engines": {
     "node": ">=18.0.0"
