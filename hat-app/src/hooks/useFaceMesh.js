@@ -1,13 +1,45 @@
 import { useState, useEffect, useRef } from 'react'
-import { FaceMesh } from '@mediapipe/face_mesh'
 import { drawFaceMesh } from '../utils/drawFaceMesh'
 
 /**
  * MediaPipe Face Mesh: 468 3D landmarks per face.
- * Landmarks: x, y in [0, 1] (normalized image), z = relative depth (smaller = closer).
  * When canvasRef is provided, draws the camera feed + face mesh to that canvas (debug view).
+ * Loads FaceMesh via dynamic import; if undefined (Vite production/mobile), loads from CDN.
  */
 const NOSE_TIP_INDEX = 1
+const MEDIAPIPE_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4'
+
+let cdnLoadPromise = null
+function loadFaceMeshFromCDN() {
+  if (typeof window !== 'undefined' && typeof window.FaceMesh === 'function') {
+    return Promise.resolve(window.FaceMesh)
+  }
+  if (cdnLoadPromise) return cdnLoadPromise
+  cdnLoadPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = `${MEDIAPIPE_CDN}/face_mesh.js`
+    script.crossOrigin = 'anonymous'
+    script.onload = () => {
+      if (typeof window.FaceMesh === 'function') resolve(window.FaceMesh)
+      else reject(new Error('FaceMesh not found on window after script load'))
+    }
+    script.onerror = () => reject(new Error('Failed to load MediaPipe Face Mesh script'))
+    document.head.appendChild(script)
+  })
+  return cdnLoadPromise
+}
+
+async function getFaceMeshConstructor() {
+  try {
+    const mod = await import('@mediapipe/face_mesh')
+    const C = mod?.FaceMesh ?? mod?.default?.FaceMesh ?? (typeof mod?.default === 'function' ? mod.default : null)
+    if (typeof C === 'function') return { FaceMesh: C, fromCDN: false }
+  } catch (_) {
+    /* bundled constructor often undefined in production */
+  }
+  const FaceMesh = await loadFaceMeshFromCDN()
+  return { FaceMesh, fromCDN: true }
+}
 
 export function useFaceMesh(videoRef, enabled = true, canvasRef = null, drawMesh = true) {
   const [landmarks, setLandmarks] = useState(null)
@@ -16,6 +48,7 @@ export function useFaceMesh(videoRef, enabled = true, canvasRef = null, drawMesh
   const [initialized, setInitialized] = useState(false)
   const faceMeshRef = useRef(null)
   const rafRef = useRef(null)
+  const fromCDNRef = useRef(false)
 
   useEffect(() => {
     if (!enabled || !videoRef?.current) return
@@ -23,9 +56,16 @@ export function useFaceMesh(videoRef, enabled = true, canvasRef = null, drawMesh
     let cancelled = false
     const initFaceMesh = async () => {
       try {
+        const { FaceMesh, fromCDN } = await getFaceMeshConstructor()
+        if (cancelled) return
+        fromCDNRef.current = fromCDN
+        if (typeof FaceMesh !== 'function') {
+          throw new Error(
+            'FaceMesh not available. Try reloading the page; if it persists, your browser may not support this feature.'
+          )
+        }
         const faceMesh = new FaceMesh({
-          locateFile: (file) =>
-            `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
+          locateFile: (file) => `${MEDIAPIPE_CDN}/${file}`,
         })
         faceMesh.setOptions({
           maxNumFaces: 1,
@@ -58,10 +98,15 @@ export function useFaceMesh(videoRef, enabled = true, canvasRef = null, drawMesh
               if (ctx) {
                 ctx.drawImage(img, 0, 0, w, h)
                 if (drawMesh) {
-                  drawFaceMesh(ctx, results.multiFaceLandmarks, w, h, {
+                  const opts = {
                     contours: true,
                     tesselation: false,
-                  })
+                  }
+                  if (fromCDNRef.current && typeof window !== 'undefined' && window.FACEMESH_CONTOURS) {
+                    opts.connectionList = window.FACEMESH_CONTOURS
+                    opts.tesselationList = window.FACEMESH_TESSELATION
+                  }
+                  drawFaceMesh(ctx, results.multiFaceLandmarks, w, h, opts)
                 }
               }
             }
