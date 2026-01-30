@@ -56,8 +56,25 @@ jobs:
           [ -d Assets ] && cp -r Assets deploy/ 2>/dev/null || true
           # Copy scripts folder
           [ -d scripts ] && cp -r scripts deploy/ 2>/dev/null || true
-          # Copy tutorials folder
-          [ -d tutorials ] && cp -r tutorials deploy/ 2>/dev/null || true
+          # Copy tutorials folder (excluding build-time files)
+          if [ -d tutorials ]; then
+            mkdir -p deploy/tutorials
+            # Copy tutorial-styles.css and tutorial-script.js (needed at runtime)
+            cp tutorials/tutorial-styles.css deploy/tutorials/ 2>/dev/null || true
+            cp tutorials/tutorial-script.js deploy/tutorials/ 2>/dev/null || true
+            # Copy each tutorial directory (generated HTML pages and assets)
+            for dir in tutorials/*/; do
+              if [ -d "$dir" ]; then
+                tutorial_name=$(basename "$dir")
+                mkdir -p "deploy/tutorials/$tutorial_name"
+                cp -r "$dir"* "deploy/tutorials/$tutorial_name/" 2>/dev/null || true
+              fi
+            done
+            # Explicitly exclude build-time files
+            rm -f deploy/tutorials/data.json 2>/dev/null || true
+            rm -f deploy/tutorials/tutorial-template.html 2>/dev/null || true
+            rm -f deploy/tutorials/README.md 2>/dev/null || true
+          fi
           echo "✅ Deployment prepared"
           ls -la deploy/
       
