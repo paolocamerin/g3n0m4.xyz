@@ -7,7 +7,7 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>AR Hat App</h1>
-        <p className="subtitle">Phase 1: Camera Access</p>
+        <p className="subtitle">Face tracking + AR overlay</p>
       </header>
       <main className="app-main">
         <CameraFeed />
