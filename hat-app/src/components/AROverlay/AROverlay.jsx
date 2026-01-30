@@ -1,28 +1,39 @@
-import { useRef, useMemo } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { useRef, useMemo, useEffect } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useContainerSize } from './useContainerSize'
 import './AROverlay.css'
 
 /**
  * Converts MediaPipe landmark (x, y in [0,1], z relative depth) to Three.js world position.
  * Camera is at origin looking at -Z. We flip x so the sphere matches the mirrored selfie view.
+ * depth = distance in front of camera (positive = further away, z = -depth).
+ * zScale = multiplier for landmark.z (MediaPipe z: smaller = closer to camera).
  */
-function landmarkToPosition(landmark, aspect) {
+function landmarkToPosition(landmark, aspect, depth = 1, zScale = 0.3) {
   if (!landmark) return null
   const scale = 1.2
-  const depth = 1
   return [
     (0.5 - landmark.x) * 2 * scale * aspect, // flip x for mirrored view
     (0.5 - landmark.y) * 2 * scale,
-    -depth + (landmark.z ?? 0) * 0.3,
+    -depth + (landmark.z ?? 0) * zScale,
   ]
 }
 
-function SphereAtLandmark({ noseTip, aspect }) {
+function CameraFovSync({ fov }) {
+  const { camera } = useThree()
+  useEffect(() => {
+    camera.fov = fov
+    camera.updateProjectionMatrix()
+  }, [camera, fov])
+  return null
+}
+
+function SphereAtLandmark({ noseTip, aspect, sphereDepth, sphereZScale }) {
   const meshRef = useRef()
   const position = useMemo(
-    () => landmarkToPosition(noseTip, aspect),
-    [noseTip?.x, noseTip?.y, noseTip?.z, aspect]
+    () =>
+      landmarkToPosition(noseTip, aspect, sphereDepth, sphereZScale),
+    [noseTip?.x, noseTip?.y, noseTip?.z, aspect, sphereDepth, sphereZScale]
   )
 
   useFrame(() => {
@@ -41,15 +52,27 @@ function SphereAtLandmark({ noseTip, aspect }) {
   )
 }
 
-function Scene({ noseTip, aspect }) {
+function Scene({ noseTip, aspect, cameraFov, sphereDepth, sphereZScale }) {
   return (
     <>
-      <SphereAtLandmark noseTip={noseTip} aspect={aspect} />
+      <CameraFovSync fov={cameraFov} />
+      <SphereAtLandmark
+        noseTip={noseTip}
+        aspect={aspect}
+        sphereDepth={sphereDepth}
+        sphereZScale={sphereZScale}
+      />
     </>
   )
 }
 
-export default function AROverlay({ containerRef, noseTip }) {
+export default function AROverlay({
+  containerRef,
+  noseTip,
+  cameraFov = 65,
+  sphereDepth = 1,
+  sphereZScale = 0.3,
+}) {
   const size = useContainerSize(containerRef)
   const aspect = size.width > 0 ? size.width / size.height : 16 / 9
 
@@ -68,14 +91,20 @@ export default function AROverlay({ containerRef, noseTip }) {
         gl={{ alpha: true, antialias: true }}
         camera={{
           position: [0, 0, 0],
-          fov: 65, // typical front-facing webcam vertical FOV (~60–70°)
+          fov: cameraFov,
           near: 0.1,
           far: 10,
           aspect: aspect,
         }}
         style={{ width: size.width, height: size.height }}
       >
-        <Scene noseTip={noseTip} aspect={aspect} />
+        <Scene
+          noseTip={noseTip}
+          aspect={aspect}
+          cameraFov={cameraFov}
+          sphereDepth={sphereDepth}
+          sphereZScale={sphereZScale}
+        />
       </Canvas>
     </div>
   )
