@@ -7,10 +7,17 @@ import './CameraFeed.css'
 // When QR/token is implemented, this will be driven by that; for now always show effect.
 const showEffect = true
 
+const FOV_MIN = 40
+const FOV_MAX = 180
+const DEPTH_MIN = 0.3
+const DEPTH_MAX = 2.5
+
 export default function CameraFeed() {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
   const [showMeshOverlay, setShowMeshOverlay] = useState(true)
+  const [cameraFov, setCameraFov] = useState(65)
+  const [sphereDepth, setSphereDepth] = useState(1)
   const {
     videoRef,
     error,
@@ -79,7 +86,12 @@ export default function CameraFeed() {
         aria-label="Camera feed with face mesh overlay"
       />
       {showEffect && (
-        <AROverlay containerRef={containerRef} noseTip={noseTip} />
+        <AROverlay
+          containerRef={containerRef}
+          noseTip={noseTip}
+          cameraFov={cameraFov}
+          sphereDepth={sphereDepth}
+        />
       )}
       <div className="camera-overlay">
         <div className="status-indicator">
@@ -103,6 +115,39 @@ export default function CameraFeed() {
           </span>
           <span>Show mesh</span>
         </label>
+        <div className="ar-controls">
+          <div className="ar-control">
+            <label>
+              <span className="ar-control-label">FOV</span>
+              <span className="ar-control-value" aria-live="polite">{cameraFov}°</span>
+            </label>
+            <input
+              type="range"
+              min={FOV_MIN}
+              max={FOV_MAX}
+              value={cameraFov}
+              onChange={(e) => setCameraFov(Number(e.target.value))}
+              aria-label="Camera field of view (degrees)"
+              className="ar-slider"
+            />
+          </div>
+          <div className="ar-control" title="Distance of sphere from camera (z = −depth). Nose-tip landmark.">
+            <label>
+              <span className="ar-control-label">Sphere depth</span>
+              <span className="ar-control-value" aria-live="polite">{sphereDepth.toFixed(2)}</span>
+            </label>
+            <input
+              type="range"
+              min={DEPTH_MIN}
+              max={DEPTH_MAX}
+              step={0.05}
+              value={sphereDepth}
+              onChange={(e) => setSphereDepth(Number(e.target.value))}
+              aria-label="Sphere depth (distance from camera)"
+              className="ar-slider"
+            />
+          </div>
+        </div>
       </div>
     </div>
   )
