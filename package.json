@@ -1,0 +1,12 @@
+{
+  "name": "g3n0m4-xyz",
+  "version": "1.0.0",
+  "description": "Personal website and tutorials",
+  "scripts": {
+    "build:tutorials": "node scripts/generate-tutorials.js",
+    "build": "npm run build:tutorials"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

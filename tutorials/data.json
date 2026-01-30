@@ -1,0 +1,48 @@
+{
+  "tutorials": [
+    {
+      "slug": "06-holographic-card",
+      "title": "Holographic card",
+      "subtitle": "Assets for the tutorial \"Holographic card in Touchdesinger\".",
+      "description": "Assets for the Holographic card in TouchDesigner tutorial - Paolo Camerin",
+      "heroImage": {
+        "enabled": true,
+        "src": "assets/hero_bird.png",
+        "alt": "Holographic card with Great Tit bird"
+      },
+      "credits": [
+        {
+          "name": "marielleroyseth",
+          "instagram": "marielleroyseth"
+        },
+        {
+          "name": "g3n0m4",
+          "instagram": "g3n0m4"
+        }
+      ],
+      "video": {
+        "enabled": true,
+        "youtubeId": "liHwmWQzCLA",
+        "title": "YouTube video player"
+      },
+      "assets": [
+        {
+          "name": "Bird",
+          "path": "assets/bird.png",
+          "size": "0.5 MB",
+          "icon": "🐦"
+        },
+        {
+          "name": "Petals",
+          "path": "assets/petals.png",
+          "size": "0.08 MB",
+          "icon": "🌸"
+        }
+      ],
+      "content": {
+        "type": "html",
+        "body": ""
+      }
+    }
+  ]
+}

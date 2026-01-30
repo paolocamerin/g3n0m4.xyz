@@ -4,45 +4,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tutorial Title - Paolo Camerin</title>
+    <title>{{TITLE}} - Paolo Camerin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="tutorial-styles.css">
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../tutorial-styles.css">
     <!-- Favicon (auto-adapts to light/dark mode) -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <meta name="description" content="Tutorial description - Learn from Paolo Camerin" />
+    <meta name="description" content="{{DESCRIPTION}}" />
 </head>
 
 <body>
     <main class="tutorial-main">
         <div class="tutorial-container">
+
+            {{HERO_IMAGE_SECTION}}
+
             <header class="tutorial-header">
-                <h1 class="tutorial-title">Tutorial Title</h1>
-                <p class="tutorial-subtitle">A brief description of what this tutorial covers</p>
+                <h1 class="tutorial-title">{{TITLE}}</h1>
+                {{SUBTITLE_HTML}}
+                {{VIDEO_SECTION}}
             </header>
 
-            <!-- Hero Image Section (optional - remove if not needed) -->
-            <div class="hero-image-section">
-                <img src="assets/hero-image.png" alt="Tutorial hero image" class="hero-image">
-                <!-- Credit Chip (optional - remove if not needed) -->
-                <!-- <div class="credit-chip">
-                    <a href="https://www.instagram.com/artistname/" target="_blank" rel="noopener noreferrer" class="credit-link">
-                        <svg class="instagram-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="currentColor"/>
-                        </svg>
-                        <span>@artistname</span>
-                    </a>
-                </div> -->
-            </div>
-
             <div class="tutorial-content">
-                <!-- Tutorial content goes here -->
-                <section class="tutorial-section">
-                    <h2>Introduction</h2>
-                    <p>This is where your tutorial content goes. You can add text, images, code examples, and more.</p>
-                </section>
+                {{CONTENT_HTML}}
 
                 <!-- Assets Download Section -->
                 <section class="assets-section">
@@ -60,7 +46,49 @@
         </div>
     </main>
 
-    <script src="tutorial-script.js"></script>
+    <script>
+        // Assets for this tutorial
+        const assets = {{ASSETS_JSON}};
+        
+        // Render assets using safe DOM methods (prevents XSS)
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('assetsContainer');
+            if (!container) return;
+            
+            // Clear container safely
+            container.textContent = '';
+            
+            if (assets.length === 0) {
+                const msg = document.createElement('p');
+                msg.style.color = 'var(--secondary-color)';
+                msg.textContent = 'No assets available for this tutorial.';
+                container.appendChild(msg);
+                return;
+            }
+            
+            assets.forEach(asset => {
+                const link = document.createElement('a');
+                link.href = asset.path;
+                link.download = '';
+                link.className = 'asset-button';
+                
+                const icon = document.createElement('span');
+                icon.className = 'asset-icon';
+                icon.textContent = asset.icon;
+                
+                const name = document.createElement('span');
+                name.className = 'asset-name';
+                name.textContent = asset.name;
+                
+                const size = document.createElement('span');
+                size.className = 'asset-size';
+                size.textContent = asset.size;
+                
+                link.append(icon, name, size);
+                container.appendChild(link);
+            });
+        });
+    </script>
 </body>
 
 </html>
