@@ -10,6 +10,8 @@ const NOSE_TIP_INDEX = 1
 const FOREHEAD_INDEX = 10   // forehead center (between eyes)
 const HEAD_TOP_INDEX = 151 // top of head (for spawn + tilt)
 const MEDIAPIPE_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4'
+/** Throttle face mesh to ~20fps to save CPU/GPU on mobile. */
+const FACE_MESH_INTERVAL_MS = 50
 
 let cdnLoadPromise = null
 function loadFaceMeshFromCDN() {
@@ -51,6 +53,7 @@ export function useFaceMesh(videoRef, enabled = true, canvasRef = null, drawMesh
   const faceMeshRef = useRef(null)
   const rafRef = useRef(null)
   const fromCDNRef = useRef(false)
+  const lastSendTimeRef = useRef(0)
 
   useEffect(() => {
     if (!enabled || !videoRef?.current) return
@@ -140,18 +143,18 @@ export function useFaceMesh(videoRef, enabled = true, canvasRef = null, drawMesh
 
     const video = videoRef.current
 
-    const processFrame = async () => {
+    const processFrame = () => {
       if (!faceMeshRef.current) return
-      if (video.readyState < 2) {
-        rafRef.current = requestAnimationFrame(processFrame)
-        return
-      }
-      try {
-        await faceMeshRef.current.send({ image: video })
-      } catch (_) {
-        // ignore single-frame errors
-      }
       rafRef.current = requestAnimationFrame(processFrame)
+
+      if (video.readyState < 2) return
+      if (document.visibilityState === 'hidden') return
+
+      const now = performance.now()
+      if (now - lastSendTimeRef.current < FACE_MESH_INTERVAL_MS) return
+      lastSendTimeRef.current = now
+
+      faceMeshRef.current.send({ image: video }).catch(() => {})
     }
 
     rafRef.current = requestAnimationFrame(processFrame)

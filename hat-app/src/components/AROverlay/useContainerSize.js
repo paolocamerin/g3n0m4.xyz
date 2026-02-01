@@ -13,9 +13,25 @@ export function useContainerSize(containerRef) {
     }
 
     update()
+
     const observer = new ResizeObserver(update)
     observer.observe(el)
-    return () => observer.disconnect()
+
+    let orientationTimeoutId = null
+    const onOrientationChange = () => {
+      requestAnimationFrame(() => requestAnimationFrame(update))
+      if (orientationTimeoutId) clearTimeout(orientationTimeoutId)
+      orientationTimeoutId = setTimeout(update, 150)
+    }
+    window.addEventListener('resize', update)
+    window.addEventListener('orientationchange', onOrientationChange)
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', update)
+      window.removeEventListener('orientationchange', onOrientationChange)
+      if (orientationTimeoutId) clearTimeout(orientationTimeoutId)
+    }
   }, [containerRef])
 
   return size
