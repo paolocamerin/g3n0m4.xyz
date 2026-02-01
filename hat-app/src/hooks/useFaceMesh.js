@@ -7,6 +7,8 @@ import { drawFaceMesh } from '../utils/drawFaceMesh'
  * Loads FaceMesh via dynamic import; if undefined (Vite production/mobile), loads from CDN.
  */
 const NOSE_TIP_INDEX = 1
+const FOREHEAD_INDEX = 10   // forehead center (between eyes)
+const HEAD_TOP_INDEX = 151 // top of head (for spawn + tilt)
 const MEDIAPIPE_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4'
 
 let cdnLoadPromise = null
@@ -159,10 +161,14 @@ export function useFaceMesh(videoRef, enabled = true, canvasRef = null, drawMesh
   }, [enabled, initialized, videoRef])
 
   const noseTip = landmarks && landmarks[NOSE_TIP_INDEX] ? landmarks[NOSE_TIP_INDEX] : null
+  const forehead = landmarks && landmarks[FOREHEAD_INDEX] ? landmarks[FOREHEAD_INDEX] : null
+  const headTop = landmarks && landmarks[HEAD_TOP_INDEX] ? landmarks[HEAD_TOP_INDEX] : null
 
   return {
     landmarks,
     noseTip,
+    forehead,
+    headTop,
     faceDetected,
     error,
   }

@@ -27,7 +27,7 @@ export default function CameraFeed() {
     startCamera,
     stopCamera,
   } = useCamera()
-  const { noseTip, faceDetected } = useFaceMesh(
+  const { noseTip, forehead, headTop, faceDetected } = useFaceMesh(
     videoRef,
     showEffect && hasPermission,
     canvasRef,
@@ -90,6 +90,8 @@ export default function CameraFeed() {
         <AROverlay
           containerRef={containerRef}
           noseTip={noseTip}
+          forehead={forehead}
+          headTop={headTop}
           cameraFov={cameraFov}
           sphereDepth={sphereDepth}
           showParticles={showParticles}

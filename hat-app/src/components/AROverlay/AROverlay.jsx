@@ -21,6 +21,8 @@ const INIT_VX_SPREAD = 1
 const INIT_VY_SPREAD = 1  // higher y velocity for initial upward motion
 const HEAD_OFFSET_Y = 0.38 // higher = spawn on top of head (landmark y is smaller above)
 const EMIT_DEPTH_OFFSET = 0.25 // added to sphereDepth so spawn is deeper into scene
+const EMIT_Y_MAX = 1.0 // clamp spawn Y so tilting head up doesn't push particles off screen
+const EMIT_TILT_Y_DAMP = 0.5 // when head tilts up, lower ceiling by this * tiltUpFactor (0..1)
 const EMIT_RATE = 30 // particles per second
 
 /**
@@ -354,12 +356,27 @@ function SphereAtLandmark({ noseTip, aspect, sphereDepth, sphereZScale }) {
   )
 }
 
-function Scene({ noseTip, aspect, cameraFov, sphereDepth, sphereZScale, showParticles }) {
+function Scene({ noseTip, forehead, headTop, aspect, cameraFov, sphereDepth, sphereZScale, showParticles }) {
+  // Spawn position: use forehead + headTop (top of head) when available; fallback to nose + offset
   const emitPosition = useMemo(() => {
-    if (!noseTip) return null
-    const aboveHead = { x: noseTip.x, y: noseTip.y - HEAD_OFFSET_Y, z: noseTip.z }
-    return landmarkToPosition(aboveHead, aspect, sphereDepth + EMIT_DEPTH_OFFSET, sphereZScale)
-  }, [noseTip?.x, noseTip?.y, noseTip?.z, aspect, sphereDepth, sphereZScale])
+    const topOfHead = forehead && headTop
+      ? { x: (forehead.x + headTop.x) / 2, y: (forehead.y + headTop.y) / 2, z: (forehead.z + headTop.z) / 2 }
+      : forehead
+        ? { x: forehead.x, y: forehead.y, z: forehead.z }
+        : noseTip
+          ? { x: noseTip.x, y: noseTip.y - HEAD_OFFSET_Y, z: noseTip.z }
+          : null
+    if (!topOfHead) return null
+    const pos = landmarkToPosition(topOfHead, aspect, sphereDepth + EMIT_DEPTH_OFFSET, sphereZScale)
+    if (!pos) return null
+    // Tilt from nose→forehead: when head tilts up, forehead.y < nose.y so (nose.y - forehead.y) is positive
+    const tiltUpFactor = noseTip && forehead
+      ? Math.max(0, Math.min(1, (noseTip.y - forehead.y) * 2))
+      : 0
+    const effectiveMaxY = EMIT_Y_MAX - tiltUpFactor * EMIT_TILT_Y_DAMP
+    pos[1] = Math.min(pos[1], effectiveMaxY)
+    return pos
+  }, [noseTip?.x, noseTip?.y, noseTip?.z, forehead?.x, forehead?.y, forehead?.z, headTop?.x, headTop?.y, headTop?.z, aspect, sphereDepth, sphereZScale])
 
   return (
     <>
@@ -395,6 +412,8 @@ function Scene({ noseTip, aspect, cameraFov, sphereDepth, sphereZScale, showPart
 export default function AROverlay({
   containerRef,
   noseTip,
+  forehead,
+  headTop,
   cameraFov = 65,
   sphereDepth = 1,
   sphereZScale = 0.3,
@@ -427,6 +446,8 @@ export default function AROverlay({
       >
         <Scene
           noseTip={noseTip}
+          forehead={forehead}
+          headTop={headTop}
           aspect={aspect}
           cameraFov={cameraFov}
           sphereDepth={sphereDepth}
