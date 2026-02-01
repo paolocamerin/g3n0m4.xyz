@@ -1,11 +1,23 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { SidebarIcon, XIcon } from '@phosphor-icons/react'
 import { useCamera } from '../../hooks/useCamera'
 import { useFaceMesh } from '../../hooks/useFaceMesh'
+import { useMarkerDetection, decodeQRFromImageData } from '../../hooks/useMarkerDetection'
 import AROverlay from '../AROverlay/AROverlay'
 import './CameraFeed.css'
 
-// When QR/token is implemented, this will be driven by that; for now always show effect.
-const showEffect = true
+const QR_CHECK_INTERVAL_MS = 300
+const QR_GRACE_MS = 4000
+/** Higher resolution improves small QR detection; may impact performance on low-end devices. */
+const PREFER_HIGH_RES_FOR_QR = true
+const CAMERA_CONSTRAINTS_HIGH_RES = {
+  video: {
+    facingMode: 'user',
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
+  },
+  audio: false,
+}
 
 const FOV_MIN = 40
 const FOV_MAX = 180
@@ -19,6 +31,12 @@ export default function CameraFeed() {
   const [showParticles, setShowParticles] = useState(true)
   const [cameraFov, setCameraFov] = useState(90)   // good default for mobile
   const [sphereDepth, setSphereDepth] = useState(0.95)
+  const [testQRResult, setTestQRResult] = useState(null)
+  const [showQRDebugFrame, setShowQRDebugFrame] = useState(false)
+  const [useQRTrigger, setUseQRTrigger] = useState(true)
+  const [controlsOpen, setControlsOpen] = useState(true)
+  const testFileInputRef = useRef(null)
+  const qrDebugCanvasRef = useRef(null)
   const {
     videoRef,
     error,
@@ -27,18 +45,40 @@ export default function CameraFeed() {
     startCamera,
     stopCamera,
   } = useCamera()
+  const { markerDetected, payload: qrPayload, location: qrLocation, imageSize: qrImageSize } = useMarkerDetection(videoRef, {
+    intervalMs: QR_CHECK_INTERVAL_MS,
+    debugCanvasRef: showQRDebugFrame ? qrDebugCanvasRef : undefined,
+  })
+  const [particlesEnabledByMarker, setParticlesEnabledByMarker] = useState(false)
+  const graceTimeoutRef = useRef(null)
+  useEffect(() => {
+    if (markerDetected) {
+      if (graceTimeoutRef.current) {
+        clearTimeout(graceTimeoutRef.current)
+        graceTimeoutRef.current = null
+      }
+      setParticlesEnabledByMarker(true)
+    } else {
+      if (!graceTimeoutRef.current) {
+        graceTimeoutRef.current = setTimeout(() => {
+          graceTimeoutRef.current = null
+          setParticlesEnabledByMarker(false)
+        }, QR_GRACE_MS)
+      }
+    }
+    return () => {
+      if (graceTimeoutRef.current) clearTimeout(graceTimeoutRef.current)
+    }
+  }, [markerDetected])
   const { noseTip, forehead, headTop, faceDetected } = useFaceMesh(
     videoRef,
-    showEffect && hasPermission,
+    hasPermission,
     canvasRef,
     showMeshOverlay
   )
 
   useEffect(() => {
-    // Start camera when component mounts
-    startCamera()
-
-    // Cleanup on unmount
+    startCamera(PREFER_HIGH_RES_FOR_QR ? CAMERA_CONSTRAINTS_HIGH_RES : undefined)
     return () => {
       stopCamera()
     }
@@ -47,6 +87,47 @@ export default function CameraFeed() {
   const handleRetry = () => {
     startCamera()
   }
+
+  const handleTestQRFile = useCallback((e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setTestQRResult(null)
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const canvas = document.createElement('canvas')
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        setTestQRResult({ ok: false, error: 'No canvas 2d' })
+        return
+      }
+      ctx.drawImage(img, 0, 0)
+      let imageData
+      try {
+        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      } catch (err) {
+        setTestQRResult({ ok: false, error: err.message || 'getImageData failed' })
+        return
+      }
+      const code = decodeQRFromImageData(imageData.data, imageData.width, imageData.height, { tryFlipped: true })
+      if (code) {
+        setTestQRResult({ ok: true, payload: code.data })
+        console.log('[QR test] decoded:', code.data)
+      } else {
+        setTestQRResult({ ok: false, error: 'No QR code found in image' })
+        console.log('[QR test] no QR in image')
+      }
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      setTestQRResult({ ok: false, error: 'Failed to load image' })
+    }
+    img.src = url
+    e.target.value = ''
+  }, [])
 
   if (error) {
     return (
@@ -86,7 +167,27 @@ export default function CameraFeed() {
         className="camera-canvas"
         aria-label="Camera feed with face mesh overlay"
       />
-      {showEffect && (
+      {hasPermission && qrLocation && qrImageSize && (
+        <svg
+          className="camera-qr-box"
+          viewBox={`0 0 ${qrImageSize.width} ${qrImageSize.height}`}
+          preserveAspectRatio="xMidYMid slice"
+          aria-hidden
+        >
+          <polygon
+            points={`${qrLocation.topLeftCorner.x},${qrLocation.topLeftCorner.y} ${qrLocation.topRightCorner.x},${qrLocation.topRightCorner.y} ${qrLocation.bottomRightCorner.x},${qrLocation.bottomRightCorner.y} ${qrLocation.bottomLeftCorner.x},${qrLocation.bottomLeftCorner.y}`}
+            fill="none"
+            stroke="rgba(74, 222, 128, 0.9)"
+            strokeWidth="3"
+          />
+        </svg>
+      )}
+      {useQRTrigger && !markerDetected && hasPermission && (
+        <div className="camera-qr-hint" aria-live="polite">
+          Any QR code enables particles — point camera at one
+        </div>
+      )}
+      {hasPermission && (
         <AROverlay
           containerRef={containerRef}
           noseTip={noseTip}
@@ -95,16 +196,87 @@ export default function CameraFeed() {
           cameraFov={cameraFov}
           sphereDepth={sphereDepth}
           showParticles={showParticles}
+          particlesEnabledByMarker={useQRTrigger ? particlesEnabledByMarker : true}
         />
       )}
       <div className="camera-overlay">
-        <div className="camera-controls-panel">
+        {!controlsOpen && (
+          <button
+            type="button"
+            className="camera-controls-toggle camera-controls-toggle--closed"
+            onClick={() => setControlsOpen(true)}
+            aria-label="Open panel"
+            title="Open panel"
+          >
+            <SidebarIcon size={20} weight="regular" className="camera-controls-toggle-icon" aria-hidden />
+            <span>Open panel</span>
+          </button>
+        )}
+        <div className={`camera-controls-panel ${controlsOpen ? '' : 'camera-controls-panel--closed'}`}>
+          <button
+            type="button"
+            className="camera-controls-toggle camera-controls-toggle--open"
+            onClick={() => setControlsOpen(false)}
+            aria-label="Close panel"
+            title="Close panel"
+          >
+            <XIcon size={22} weight="regular" className="camera-controls-toggle-icon" aria-hidden />
+          </button>
           <div className="status-indicator">
             {hasPermission && <span className="status-dot active"></span>}
             <span className="status-text">
               {hasPermission ? (faceDetected ? 'Face detected' : 'Camera Active') : 'Waiting...'}
             </span>
           </div>
+          <div className="status-indicator camera-qr-status" aria-live="polite">
+            <span className={`status-dot ${markerDetected ? 'active' : ''}`} />
+            <span className="status-text">
+              QR: {markerDetected ? `detected${qrPayload ? ` — "${qrPayload.length > 20 ? qrPayload.slice(0, 20) + '…' : qrPayload}"` : ''}` : 'none'}
+            </span>
+          </div>
+          <div className="camera-qr-test">
+            <input
+              ref={testFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleTestQRFile}
+              className="camera-qr-test-input"
+              aria-label="Test QR with image file"
+            />
+            <button
+              type="button"
+              className="camera-qr-test-btn"
+              onClick={() => testFileInputRef.current?.click()}
+            >
+              Test QR with image file
+            </button>
+            {testQRResult && (
+              <div className={`camera-qr-test-result ${testQRResult.ok ? 'ok' : 'err'}`}>
+                {testQRResult.ok ? `Decoded: ${testQRResult.payload}` : testQRResult.error}
+              </div>
+            )}
+          </div>
+          <label className="mesh-toggle" title="Show the raw frame we send to QR decoder (for troubleshooting)">
+            <input
+              type="checkbox"
+              checked={showQRDebugFrame}
+              onChange={(e) => setShowQRDebugFrame(e.target.checked)}
+              aria-label="Show QR debug frame"
+            />
+            <span
+              className={`mesh-toggle-track ${showQRDebugFrame ? 'on' : ''}`}
+              aria-hidden
+            >
+              <span className="mesh-toggle-thumb" />
+            </span>
+            <span>Show QR debug frame</span>
+          </label>
+          {showQRDebugFrame && (
+            <div className="camera-qr-debug-wrap">
+              <canvas ref={qrDebugCanvasRef} className="camera-qr-debug-canvas" title="Raw frame sent to jsQR" />
+              <span className="camera-qr-debug-label">Raw frame sent to jsQR (updates every 1s)</span>
+            </div>
+          )}
           <label className="mesh-toggle" title="Show or hide face mesh overlay">
             <input
               type="checkbox"
@@ -119,6 +291,21 @@ export default function CameraFeed() {
               <span className="mesh-toggle-thumb" />
             </span>
             <span>Show mesh</span>
+          </label>
+          <label className="mesh-toggle" title="Require QR code in view to emit particles; off = particles always on when enabled">
+            <input
+              type="checkbox"
+              checked={useQRTrigger}
+              onChange={(e) => setUseQRTrigger(e.target.checked)}
+              aria-label="Require QR for particles"
+            />
+            <span
+              className={`mesh-toggle-track ${useQRTrigger ? 'on' : ''}`}
+              aria-hidden
+            >
+              <span className="mesh-toggle-thumb" />
+            </span>
+            <span>QR trigger</span>
           </label>
           <label className="mesh-toggle" title="Enable or disable particle emission">
             <input
