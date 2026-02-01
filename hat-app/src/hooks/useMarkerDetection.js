@@ -140,6 +140,7 @@ export function useMarkerDetection(videoRef, options = {}) {
 
       ctx.drawImage(video, 0, 0, w, h)
       const imageData = ctx.getImageData(0, 0, w, h)
+      /* Full resolution passed to jsQR (no downscale) for highest precision */
 
       const debugCanvas = debugCanvasRef?.current
       if (debugCanvas && debugCanvas.getContext) {

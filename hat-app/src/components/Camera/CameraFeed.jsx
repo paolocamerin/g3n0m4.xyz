@@ -9,17 +9,18 @@ import './CameraFeed.css'
 /** At least 15fps for QR detection (1000/15 ≈ 66.67ms). */
 const QR_CHECK_INTERVAL_MS = 66
 const QR_GRACE_MS = 4000
-/** Higher resolution improves small QR detection; off by default to save energy on mobile. */
-const PREFER_HIGH_RES_FOR_QR = false
-const CAMERA_CONSTRAINTS_HIGH_RES = {
+/** Use full resolution for highest QR precision (more pixels = better small/distant QR). */
+const USE_FULL_RES_FOR_QR = true
+/** Request maximum resolution the device supports; jsQR receives full video frame (no downscale). */
+const CAMERA_CONSTRAINTS_FULL_RES = {
   video: {
     facingMode: 'user',
-    width: { ideal: 1920 },
-    height: { ideal: 1080 },
+    width: { ideal: 1920, max: 4096 },
+    height: { ideal: 1080, max: 2160 },
   },
   audio: false,
 }
-/** Default: 720p + 30fps cap for lower power on phones. */
+/** Fallback: 720p + 30fps cap for lower power. */
 const CAMERA_CONSTRAINTS_ENERGY = {
   video: {
     facingMode: 'user',
@@ -89,7 +90,7 @@ export default function CameraFeed() {
   )
 
   useEffect(() => {
-    startCamera(PREFER_HIGH_RES_FOR_QR ? CAMERA_CONSTRAINTS_HIGH_RES : CAMERA_CONSTRAINTS_ENERGY)
+    startCamera(USE_FULL_RES_FOR_QR ? CAMERA_CONSTRAINTS_FULL_RES : CAMERA_CONSTRAINTS_ENERGY)
     return () => {
       stopCamera()
     }
