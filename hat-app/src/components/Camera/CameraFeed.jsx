@@ -6,15 +6,26 @@ import { useMarkerDetection, decodeQRFromImageData } from '../../hooks/useMarker
 import AROverlay from '../AROverlay/AROverlay'
 import './CameraFeed.css'
 
-const QR_CHECK_INTERVAL_MS = 300
+/** At least 15fps for QR detection (1000/15 ≈ 66.67ms). */
+const QR_CHECK_INTERVAL_MS = 66
 const QR_GRACE_MS = 4000
-/** Higher resolution improves small QR detection; may impact performance on low-end devices. */
-const PREFER_HIGH_RES_FOR_QR = true
+/** Higher resolution improves small QR detection; off by default to save energy on mobile. */
+const PREFER_HIGH_RES_FOR_QR = false
 const CAMERA_CONSTRAINTS_HIGH_RES = {
   video: {
     facingMode: 'user',
     width: { ideal: 1920 },
     height: { ideal: 1080 },
+  },
+  audio: false,
+}
+/** Default: 720p + 30fps cap for lower power on phones. */
+const CAMERA_CONSTRAINTS_ENERGY = {
+  video: {
+    facingMode: 'user',
+    width: { ideal: 1280 },
+    height: { ideal: 720 },
+    frameRate: { ideal: 24, max: 30 },
   },
   audio: false,
 }
@@ -78,7 +89,7 @@ export default function CameraFeed() {
   )
 
   useEffect(() => {
-    startCamera(PREFER_HIGH_RES_FOR_QR ? CAMERA_CONSTRAINTS_HIGH_RES : undefined)
+    startCamera(PREFER_HIGH_RES_FOR_QR ? CAMERA_CONSTRAINTS_HIGH_RES : CAMERA_CONSTRAINTS_ENERGY)
     return () => {
       stopCamera()
     }

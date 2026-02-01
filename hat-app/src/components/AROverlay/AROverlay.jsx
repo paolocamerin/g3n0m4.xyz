@@ -1,4 +1,4 @@
-import { Suspense, useRef, useMemo, useEffect } from 'react'
+import { Suspense, useRef, useMemo, useEffect, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import { useContainerSize } from './useContainerSize'
@@ -13,6 +13,8 @@ const PARTICLE_MODEL_URL = `${import.meta.env.BASE_URL}models/scene.gltf`
  */
 
 const PARTICLE_COUNT = 80
+/** Fewer particles on touch devices to save GPU/CPU and reduce heat. */
+const PARTICLE_COUNT_MOBILE = 40
 const PARTICLE_RADIUS = 0.05
 const GRAVITY = -1.8
 const RECYCLE_Y = -3
@@ -48,6 +50,15 @@ function CameraFovSync({ fov }) {
     camera.fov = fov
     camera.updateProjectionMatrix()
   }, [camera, fov])
+  return null
+}
+
+function CameraAspectSync({ aspect }) {
+  const { camera } = useThree()
+  useEffect(() => {
+    camera.aspect = aspect
+    camera.updateProjectionMatrix()
+  }, [camera, aspect])
   return null
 }
 
@@ -358,7 +369,7 @@ function WaterfallParticlesGLTF({
   )
 }
 
-function Scene({ noseTip, forehead, headTop, aspect, cameraFov, sphereDepth, sphereZScale, showParticles, particlesEnabledByMarker }) {
+function Scene({ noseTip, forehead, headTop, aspect, cameraFov, sphereDepth, sphereZScale, showParticles, particlesEnabledByMarker, particleCount }) {
   // Spawn position: use forehead + headTop (top of head) when available; fallback to nose + offset
   const emitPosition = useMemo(() => {
     const topOfHead = forehead && headTop
@@ -391,19 +402,39 @@ function Scene({ noseTip, forehead, headTop, aspect, cameraFov, sphereDepth, sph
       />
       <pointLight position={[0, 0.5, 0.5]} intensity={1.5} distance={5} />
       <CameraFovSync fov={cameraFov} />
+      <CameraAspectSync aspect={aspect} />
       {PARTICLE_MODEL_URL ? (
         <Suspense fallback={null}>
           <WaterfallParticlesGLTF
             modelUrl={PARTICLE_MODEL_URL}
             emitPosition={emitPosition}
+            count={particleCount}
             enabled={showParticles && particlesEnabledByMarker}
           />
         </Suspense>
       ) : (
-        <WaterfallParticles emitPosition={emitPosition} enabled={showParticles && particlesEnabledByMarker} />
+        <WaterfallParticles emitPosition={emitPosition} count={particleCount} enabled={showParticles && particlesEnabledByMarker} />
       )}
     </>
   )
+}
+
+function useParticleCount() {
+  return useMemo(() => {
+    if (typeof navigator === 'undefined') return PARTICLE_COUNT
+    const isMobile = navigator.maxTouchPoints > 0 || /iPhone|iPad|Android/i.test(navigator.userAgent)
+    return isMobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT
+  }, [])
+}
+
+function usePageVisible() {
+  const [visible, setVisible] = useState(() => (typeof document !== 'undefined' ? document.visibilityState === 'visible' : true))
+  useEffect(() => {
+    const onVisibilityChange = () => setVisible(document.visibilityState === 'visible')
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [])
+  return visible
 }
 
 export default function AROverlay({
@@ -419,6 +450,8 @@ export default function AROverlay({
 }) {
   const size = useContainerSize(containerRef)
   const aspect = size.width > 0 ? size.width / size.height : 16 / 9
+  const particleCount = useParticleCount()
+  const isPageVisible = usePageVisible()
 
   if (size.width === 0 || size.height === 0) return null
 
@@ -432,6 +465,7 @@ export default function AROverlay({
       aria-hidden
     >
       <Canvas
+        frameloop={isPageVisible ? 'always' : 'never'}
         gl={{ alpha: true, antialias: true }}
         camera={{
           position: [0, 0, 0],
@@ -452,6 +486,7 @@ export default function AROverlay({
           sphereZScale={sphereZScale}
           showParticles={showParticles}
           particlesEnabledByMarker={particlesEnabledByMarker}
+          particleCount={particleCount}
         />
       </Canvas>
     </div>

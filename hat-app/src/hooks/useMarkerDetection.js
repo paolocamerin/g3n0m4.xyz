@@ -70,6 +70,8 @@ function applyQRResult(code, usedFlipped, w, h, expectedPayload, setMarkerDetect
  * @param {React.RefObject<HTMLVideoElement>} videoRef - ref to the video element (camera stream)
  * @param {{ intervalMs?: number, expectedPayload?: string, debugCanvasRef?: React.RefObject<HTMLCanvasElement>, useWorker?: boolean }} options
  */
+const QR_INTERVAL_WHEN_HIDDEN_MS = 2000
+
 export function useMarkerDetection(videoRef, options = {}) {
   const { intervalMs = 1000, expectedPayload, debugCanvasRef, useWorker = true } = options
   const [markerDetected, setMarkerDetected] = useState(false)
@@ -118,6 +120,7 @@ export function useMarkerDetection(videoRef, options = {}) {
     if (worker) worker.addEventListener('message', onWorkerMessage)
 
     const checkFrame = () => {
+      if (document.visibilityState === 'hidden') return
       if (!videoRef?.current || video.readyState < 2) {
         console.log('[QR] skip: video not ready, readyState=', video.readyState)
         return
@@ -170,10 +173,20 @@ export function useMarkerDetection(videoRef, options = {}) {
       applyQRResult(code, usedFlipped, w, h, expectedPayload, setMarkerDetected, setPayload, setLocation, setImageSize)
     }
 
-    intervalRef.current = setInterval(checkFrame, intervalMs)
-    checkFrame()
+    const schedule = () => {
+      const ms = document.visibilityState === 'hidden' ? QR_INTERVAL_WHEN_HIDDEN_MS : intervalMs
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      intervalRef.current = setInterval(checkFrame, ms)
+      checkFrame()
+    }
+
+    const onVisibilityChange = () => { schedule() }
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    schedule()
 
     return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange)
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
