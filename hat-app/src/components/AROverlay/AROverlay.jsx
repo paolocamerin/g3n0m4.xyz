@@ -19,11 +19,12 @@ const RECYCLE_Y = -3
 const EMIT_SPREAD = 0.08
 const INIT_VX_SPREAD = 1
 const INIT_VY_SPREAD = 1  // higher y velocity for initial upward motion
-const HEAD_OFFSET_Y = 0.38 // higher = spawn on top of head (landmark y is smaller above)
 const EMIT_DEPTH_OFFSET = 0.25 // added to sphereDepth so spawn is deeper into scene
+const EMIT_Y_OFFSET = .25 // add to spawn Y: positive = higher, negative = lower
 const EMIT_Y_MAX = 1.0 // clamp spawn Y so tilting head up doesn't push particles off screen
 const EMIT_TILT_Y_DAMP = 0.5 // when head tilts up, lower ceiling by this * tiltUpFactor (0..1)
 const EMIT_RATE = 30 // particles per second
+const ANGULAR_VELOCITY = 2.0 // rad/s per axis for subtle tumbling (random per particle)
 
 /**
  * Converts MediaPipe landmark (x, y in [0,1], z relative depth) to Three.js world position.
@@ -59,6 +60,8 @@ function WaterfallParticles({ emitPosition, count = PARTICLE_COUNT, enabled = tr
   const groupRef = useRef(null)
   const positions = useRef(new Float32Array(count * 3))
   const velocities = useRef(new Float32Array(count * 3))
+  const rotations = useRef(new Float32Array(count * 3)) // euler x, y, z per particle
+  const angularVelocities = useRef(new Float32Array(count * 3))
   const active = useRef(new Uint8Array(count)) // 0 = inactive, 1 = active
   const emitAccum = useRef(0)
   const nextToEmit = useRef(0)
@@ -72,6 +75,8 @@ function WaterfallParticles({ emitPosition, count = PARTICLE_COUNT, enabled = tr
   useEffect(() => {
     const pos = positions.current
     const vel = velocities.current
+    const rot = rotations.current
+    const avel = angularVelocities.current
     const act = active.current
     for (let i = 0; i < count; i++) {
       pos[i * 3] = 0
@@ -80,6 +85,12 @@ function WaterfallParticles({ emitPosition, count = PARTICLE_COUNT, enabled = tr
       vel[i * 3] = 0
       vel[i * 3 + 1] = 0
       vel[i * 3 + 2] = 0
+      rot[i * 3] = 0
+      rot[i * 3 + 1] = 0
+      rot[i * 3 + 2] = 0
+      avel[i * 3] = 0
+      avel[i * 3 + 1] = 0
+      avel[i * 3 + 2] = 0
       act[i] = 0
     }
     emitAccum.current = 0
@@ -93,22 +104,17 @@ function WaterfallParticles({ emitPosition, count = PARTICLE_COUNT, enabled = tr
     const dt = Math.min(delta, 0.1)
     const pos = positions.current
     const vel = velocities.current
+    const rot = rotations.current
+    const avel = angularVelocities.current
     const act = active.current
 
-    // When disabled, hide all particles immediately
-    if (!enabledRef.current) {
-      for (let i = 0; i < count; i++) {
-        act[i] = 0
-        pos[i * 3 + 2] = -100
-      }
-    }
-
-    // Emit new particles if enabled
-    if (enabledRef.current) {
+    // Emit new particles only when enabled and face detected (emit position set).
+    // When disabled we only stop emission; existing particles keep falling until they recycle.
+    if (enabledRef.current && emitRef.current) {
       const emit = emitRef.current
-      const ex = emit ? emit[0] : 0
-      const ey = emit ? emit[1] : 0.5
-      const ez = emit ? emit[2] : -1
+      const ex = emit[0]
+      const ey = emit[1]
+      const ez = emit[2]
 
       emitAccum.current += dt
       const emitInterval = 1 / EMIT_RATE
@@ -121,6 +127,9 @@ function WaterfallParticles({ emitPosition, count = PARTICLE_COUNT, enabled = tr
         vel[i * 3] = (Math.random() - 0.5) * INIT_VX_SPREAD
         vel[i * 3 + 1] = (1 + Math.random()) * INIT_VY_SPREAD
         vel[i * 3 + 2] = 0
+        avel[i * 3] = (Math.random() - 0.5) * ANGULAR_VELOCITY
+        avel[i * 3 + 1] = (Math.random() - 0.5) * ANGULAR_VELOCITY
+        avel[i * 3 + 2] = (Math.random() - 0.5) * ANGULAR_VELOCITY
         act[i] = 1
         nextToEmit.current = (nextToEmit.current + 1) % count
       }
@@ -133,16 +142,20 @@ function WaterfallParticles({ emitPosition, count = PARTICLE_COUNT, enabled = tr
         pos[i * 3] += vel[i * 3] * dt
         pos[i * 3 + 1] += vel[i * 3 + 1] * dt
         pos[i * 3 + 2] += vel[i * 3 + 2] * dt
+        rot[i * 3] += avel[i * 3] * dt
+        rot[i * 3 + 1] += avel[i * 3 + 1] * dt
+        rot[i * 3 + 2] += avel[i * 3 + 2] * dt
         if (pos[i * 3 + 1] < RECYCLE_Y) {
           act[i] = 0
           pos[i * 3 + 2] = -100
         }
       }
 
-      // Update mesh position and visibility (same rendering as nose sphere)
+      // Update mesh position, rotation, and visibility
       const mesh = group.children[i]
       if (mesh) {
         mesh.position.set(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2])
+        mesh.rotation.set(rot[i * 3], rot[i * 3 + 1], rot[i * 3 + 2])
         mesh.scale.setScalar(act[i] ? PARTICLE_RADIUS : 0)
         mesh.visible = true
       }
@@ -176,6 +189,8 @@ function WaterfallParticlesGLTF({
   const groupRef = useRef(null)
   const positions = useRef(new Float32Array(count * 3))
   const velocities = useRef(new Float32Array(count * 3))
+  const rotations = useRef(new Float32Array(count * 3))
+  const angularVelocities = useRef(new Float32Array(count * 3))
   const active = useRef(new Uint8Array(count))
   const emitAccum = useRef(0)
   const nextToEmit = useRef(0)
@@ -231,6 +246,8 @@ function WaterfallParticlesGLTF({
   useEffect(() => {
     const pos = positions.current
     const vel = velocities.current
+    const rot = rotations.current
+    const avel = angularVelocities.current
     const act = active.current
     for (let i = 0; i < count; i++) {
       pos[i * 3] = 0
@@ -239,6 +256,12 @@ function WaterfallParticlesGLTF({
       vel[i * 3] = 0
       vel[i * 3 + 1] = 0
       vel[i * 3 + 2] = 0
+      rot[i * 3] = 0
+      rot[i * 3 + 1] = 0
+      rot[i * 3 + 2] = 0
+      avel[i * 3] = 0
+      avel[i * 3 + 1] = 0
+      avel[i * 3 + 2] = 0
       act[i] = 0
     }
     emitAccum.current = 0
@@ -252,20 +275,16 @@ function WaterfallParticlesGLTF({
     const dt = Math.min(delta, 0.1)
     const pos = positions.current
     const vel = velocities.current
+    const rot = rotations.current
+    const avel = angularVelocities.current
     const act = active.current
 
-    if (!enabledRef.current) {
-      for (let i = 0; i < count; i++) {
-        act[i] = 0
-        pos[i * 3 + 2] = -100
-      }
-    }
-
-    if (enabledRef.current) {
+    // When disabled we only stop emission; existing particles keep falling until they recycle.
+    if (enabledRef.current && emitRef.current) {
       const emit = emitRef.current
-      const ex = emit ? emit[0] : 0
-      const ey = emit ? emit[1] : 0.5
-      const ez = emit ? emit[2] : -1
+      const ex = emit[0]
+      const ey = emit[1]
+      const ez = emit[2]
 
       emitAccum.current += dt
       const emitInterval = 1 / EMIT_RATE
@@ -278,6 +297,9 @@ function WaterfallParticlesGLTF({
         vel[i * 3] = (Math.random() - 0.5) * INIT_VX_SPREAD
         vel[i * 3 + 1] = (1 + Math.random()) * INIT_VY_SPREAD
         vel[i * 3 + 2] = 0
+        avel[i * 3] = (Math.random() - 0.5) * ANGULAR_VELOCITY
+        avel[i * 3 + 1] = (Math.random() - 0.5) * ANGULAR_VELOCITY
+        avel[i * 3 + 2] = (Math.random() - 0.5) * ANGULAR_VELOCITY
         act[i] = 1
         nextToEmit.current = (nextToEmit.current + 1) % count
       }
@@ -289,6 +311,9 @@ function WaterfallParticlesGLTF({
         pos[i * 3] += vel[i * 3] * dt
         pos[i * 3 + 1] += vel[i * 3 + 1] * dt
         pos[i * 3 + 2] += vel[i * 3 + 2] * dt
+        rot[i * 3] += avel[i * 3] * dt
+        rot[i * 3 + 1] += avel[i * 3 + 1] * dt
+        rot[i * 3 + 2] += avel[i * 3 + 2] * dt
         if (pos[i * 3 + 1] < RECYCLE_Y) {
           act[i] = 0
           pos[i * 3 + 2] = -100
@@ -298,6 +323,7 @@ function WaterfallParticlesGLTF({
       const particleGroup = group.children[i]
       if (particleGroup) {
         particleGroup.position.set(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2])
+        particleGroup.rotation.set(rot[i * 3], rot[i * 3 + 1], rot[i * 3 + 2])
         const v = variantIndices[i]
         const norm = meshData.normalizeScales[v] ?? 1
         particleGroup.scale.setScalar(act[i] ? PARTICLE_RADIUS * norm : 0)
@@ -332,31 +358,7 @@ function WaterfallParticlesGLTF({
   )
 }
 
-function SphereAtLandmark({ noseTip, aspect, sphereDepth, sphereZScale }) {
-  const meshRef = useRef()
-  const position = useMemo(
-    () =>
-      landmarkToPosition(noseTip, aspect, sphereDepth, sphereZScale),
-    [noseTip?.x, noseTip?.y, noseTip?.z, aspect, sphereDepth, sphereZScale]
-  )
-
-  useFrame(() => {
-    if (meshRef.current && position) {
-      meshRef.current.position.set(position[0], position[1], position[2])
-    }
-  })
-
-  if (!position) return null
-
-  return (
-    <mesh ref={meshRef} position={position}>
-      <sphereGeometry args={[0.05, 16, 16]} />
-      <meshBasicMaterial color="#4ade80" />
-    </mesh>
-  )
-}
-
-function Scene({ noseTip, forehead, headTop, aspect, cameraFov, sphereDepth, sphereZScale, showParticles }) {
+function Scene({ noseTip, forehead, headTop, aspect, cameraFov, sphereDepth, sphereZScale, showParticles, particlesEnabledByMarker }) {
   // Spawn position: use forehead + headTop (top of head) when available; fallback to nose + offset
   const emitPosition = useMemo(() => {
     const topOfHead = forehead && headTop
@@ -369,6 +371,7 @@ function Scene({ noseTip, forehead, headTop, aspect, cameraFov, sphereDepth, sph
     if (!topOfHead) return null
     const pos = landmarkToPosition(topOfHead, aspect, sphereDepth + EMIT_DEPTH_OFFSET, sphereZScale)
     if (!pos) return null
+    pos[1] += EMIT_Y_OFFSET
     // Tilt from nose→forehead: when head tilts up, forehead.y < nose.y so (nose.y - forehead.y) is positive
     const tiltUpFactor = noseTip && forehead
       ? Math.max(0, Math.min(1, (noseTip.y - forehead.y) * 2))
@@ -388,22 +391,16 @@ function Scene({ noseTip, forehead, headTop, aspect, cameraFov, sphereDepth, sph
       />
       <pointLight position={[0, 0.5, 0.5]} intensity={1.5} distance={5} />
       <CameraFovSync fov={cameraFov} />
-      <SphereAtLandmark
-        noseTip={noseTip}
-        aspect={aspect}
-        sphereDepth={sphereDepth}
-        sphereZScale={sphereZScale}
-      />
       {PARTICLE_MODEL_URL ? (
         <Suspense fallback={null}>
           <WaterfallParticlesGLTF
             modelUrl={PARTICLE_MODEL_URL}
             emitPosition={emitPosition}
-            enabled={showParticles}
+            enabled={showParticles && particlesEnabledByMarker}
           />
         </Suspense>
       ) : (
-        <WaterfallParticles emitPosition={emitPosition} enabled={showParticles} />
+        <WaterfallParticles emitPosition={emitPosition} enabled={showParticles && particlesEnabledByMarker} />
       )}
     </>
   )
@@ -418,6 +415,7 @@ export default function AROverlay({
   sphereDepth = 1,
   sphereZScale = 0.3,
   showParticles = true,
+  particlesEnabledByMarker = true,
 }) {
   const size = useContainerSize(containerRef)
   const aspect = size.width > 0 ? size.width / size.height : 16 / 9
@@ -453,6 +451,7 @@ export default function AROverlay({
           sphereDepth={sphereDepth}
           sphereZScale={sphereZScale}
           showParticles={showParticles}
+          particlesEnabledByMarker={particlesEnabledByMarker}
         />
       </Canvas>
     </div>
