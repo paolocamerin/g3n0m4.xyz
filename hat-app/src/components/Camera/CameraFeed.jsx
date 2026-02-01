@@ -16,6 +16,7 @@ export default function CameraFeed() {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
   const [showMeshOverlay, setShowMeshOverlay] = useState(true)
+  const [showParticles, setShowParticles] = useState(true)
   const [cameraFov, setCameraFov] = useState(90)   // good default for mobile
   const [sphereDepth, setSphereDepth] = useState(0.95)
   const {
@@ -91,6 +92,7 @@ export default function CameraFeed() {
           noseTip={noseTip}
           cameraFov={cameraFov}
           sphereDepth={sphereDepth}
+          showParticles={showParticles}
         />
       )}
       <div className="camera-overlay">
@@ -115,6 +117,21 @@ export default function CameraFeed() {
               <span className="mesh-toggle-thumb" />
             </span>
             <span>Show mesh</span>
+          </label>
+          <label className="mesh-toggle" title="Enable or disable particle emission">
+            <input
+              type="checkbox"
+              checked={showParticles}
+              onChange={(e) => setShowParticles(e.target.checked)}
+              aria-label="Show particles"
+            />
+            <span
+              className={`mesh-toggle-track ${showParticles ? 'on' : ''}`}
+              aria-hidden
+            >
+              <span className="mesh-toggle-thumb" />
+            </span>
+            <span>Particles</span>
           </label>
           <div className="ar-controls">
             <div className="ar-control">
