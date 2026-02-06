@@ -21,6 +21,8 @@ function flipImageDataHorizontal(data, width, height) {
   }
 }
 
+const jsQROptions = { inversionAttempts: 'attemptBoth' }
+
 self.onmessage = (e) => {
   const { buffer, width, height } = e.data
   if (!buffer || !width || !height) {
@@ -28,11 +30,11 @@ self.onmessage = (e) => {
     return
   }
   const data = new Uint8ClampedArray(buffer)
-  let code = jsQR(data, width, height)
+  let code = jsQR(data, width, height, jsQROptions)
   let usedFlipped = false
   if (!code) {
     flipImageDataHorizontal(data, width, height)
-    code = jsQR(data, width, height)
+    code = jsQR(data, width, height, jsQROptions)
     usedFlipped = !!code
   }
   self.postMessage({ code, usedFlipped })

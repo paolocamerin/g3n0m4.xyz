@@ -39,7 +39,7 @@ const DEPTH_MAX = 2.5
 export default function CameraFeed() {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
-  const [showMeshOverlay, setShowMeshOverlay] = useState(true)
+  const [showMeshOverlay, setShowMeshOverlay] = useState(false)
   const [showParticles, setShowParticles] = useState(true)
   const [cameraFov, setCameraFov] = useState(90)   // good default for mobile
   const [sphereDepth, setSphereDepth] = useState(0.95)
@@ -133,17 +133,10 @@ export default function CameraFeed() {
 
     off.toBlob((blob) => {
       if (!blob) return
-      const file = new File([blob], `ar-hat-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`, { type: 'image/png' })
+      const filename = `ar-hat-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`
       const url = URL.createObjectURL(blob)
-
-      if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare?.({ files: [file] })) {
-        navigator.share({ files: [file], title: 'AR Hat Photo' }).catch(() => {
-          downloadUrl(url, file.name)
-        }).finally(() => URL.revokeObjectURL(url))
-      } else {
-        downloadUrl(url, file.name)
-        URL.revokeObjectURL(url)
-      }
+      downloadUrl(url, filename)
+      URL.revokeObjectURL(url)
     }, 'image/png', 1)
   }, [])
 
@@ -236,7 +229,7 @@ export default function CameraFeed() {
         className="camera-canvas"
         aria-label="Camera feed with face mesh overlay"
       />
-      {hasPermission && qrLocation && qrImageSize && (
+      {hasPermission && showMeshOverlay && qrLocation && qrImageSize && (
         <svg
           className="camera-qr-box"
           viewBox={`0 0 ${qrImageSize.width} ${qrImageSize.height}`}
@@ -316,6 +309,13 @@ export default function CameraFeed() {
               QR: {markerDetected ? `detected${qrPayload ? ` — "${qrPayload.length > 20 ? qrPayload.slice(0, 20) + '…' : qrPayload}"` : ''}` : 'none'}
             </span>
           </div>
+          {qrImageSize && (
+            <div className="camera-qr-status status-indicator">
+              <span className="status-text">
+                Input: {qrImageSize.width}×{qrImageSize.height} · ~{Math.round(1000 / QR_CHECK_INTERVAL_MS)}/s — hold QR still, fill frame
+              </span>
+            </div>
+          )}
           <div className="camera-qr-test">
             <input
               ref={testFileInputRef}
@@ -356,7 +356,7 @@ export default function CameraFeed() {
           {showQRDebugFrame && (
             <div className="camera-qr-debug-wrap">
               <canvas ref={qrDebugCanvasRef} className="camera-qr-debug-canvas" title="Raw frame sent to jsQR" />
-              <span className="camera-qr-debug-label">Raw frame sent to jsQR (updates every 1s)</span>
+              <span className="camera-qr-debug-label">Raw frame sent to jsQR</span>
             </div>
           )}
           <label className="mesh-toggle" title="Show or hide face mesh overlay">
