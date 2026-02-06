@@ -46,13 +46,13 @@ function locationToDisplay(loc, width) {
 }
 
 function applyQRResult(code, usedFlipped, w, h, expectedPayload, setMarkerDetected, setPayload, setLocation, setImageSize) {
+  setImageSize({ width: w, height: h })
   if (code) {
     const matches = expectedPayload == null || code.data === expectedPayload
     setMarkerDetected(matches)
     setPayload(code.data)
     const loc = code.location ?? null
     setLocation(usedFlipped ? loc : locationToDisplay(loc, w))
-    setImageSize({ width: w, height: h })
     console.log('[QR]', w, 'x', h, 'detected', usedFlipped ? '(flipped)' : '(raw):', code.data)
   } else {
     setMarkerDetected(false)
@@ -71,6 +71,9 @@ function applyQRResult(code, usedFlipped, w, h, expectedPayload, setMarkerDetect
  * @param {{ intervalMs?: number, expectedPayload?: string, debugCanvasRef?: React.RefObject<HTMLCanvasElement>, useWorker?: boolean }} options
  */
 const QR_INTERVAL_WHEN_HIDDEN_MS = 2000
+/** Decode every Nth video frame when using requestVideoFrameCallback (reduces CPU, keeps ~15 checks/sec). */
+const QR_DECODE_EVERY_N_FRAMES = 2
+const useVideoFrameCallback = typeof HTMLVideoElement !== 'undefined' && 'requestVideoFrameCallback' in HTMLVideoElement.prototype
 
 export function useMarkerDetection(videoRef, options = {}) {
   const { intervalMs = 1000, expectedPayload, debugCanvasRef, useWorker = true } = options
@@ -80,8 +83,10 @@ export function useMarkerDetection(videoRef, options = {}) {
   const [imageSize, setImageSize] = useState(null)
   const canvasRef = useRef(null)
   const intervalRef = useRef(null)
+  const rvfcHandleRef = useRef(null)
   const workerRef = useRef(null)
   const pendingRef = useRef(false)
+  const frameCountRef = useRef(0)
 
   useEffect(() => {
     if (useWorker) {
@@ -163,22 +168,62 @@ export function useMarkerDetection(videoRef, options = {}) {
 
       if (worker) return
 
-      let code = jsQR(imageData.data, imageData.width, imageData.height)
+      let code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' })
       let usedFlipped = false
       if (!code) {
         const flipped = new Uint8ClampedArray(imageData.data)
         flipImageDataHorizontal(flipped, w, h)
-        code = jsQR(flipped, imageData.width, imageData.height)
+        code = jsQR(flipped, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' })
         usedFlipped = !!code
       }
       applyQRResult(code, usedFlipped, w, h, expectedPayload, setMarkerDetected, setPayload, setLocation, setImageSize)
     }
 
+    const runDecodeIfThrottled = () => {
+      frameCountRef.current += 1
+      if (frameCountRef.current >= QR_DECODE_EVERY_N_FRAMES) {
+        frameCountRef.current = 0
+        checkFrame()
+      }
+    }
+
+    const onVideoFrame = () => {
+      if (document.visibilityState === 'hidden') {
+        schedule()
+        return
+      }
+      runDecodeIfThrottled()
+      const v = videoRef?.current
+      if (v && v.requestVideoFrameCallback) {
+        rvfcHandleRef.current = v.requestVideoFrameCallback(onVideoFrame)
+      }
+    }
+
     const schedule = () => {
-      const ms = document.visibilityState === 'hidden' ? QR_INTERVAL_WHEN_HIDDEN_MS : intervalMs
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      intervalRef.current = setInterval(checkFrame, ms)
-      checkFrame()
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+      if (rvfcHandleRef.current != null && video.cancelVideoFrameCallback) {
+        video.cancelVideoFrameCallback(rvfcHandleRef.current)
+        rvfcHandleRef.current = null
+      }
+
+      if (document.visibilityState === 'hidden') {
+        intervalRef.current = setInterval(checkFrame, QR_INTERVAL_WHEN_HIDDEN_MS)
+        checkFrame()
+        return
+      }
+
+      if (video && useVideoFrameCallback && video.requestVideoFrameCallback) {
+        frameCountRef.current = 0
+        rvfcHandleRef.current = video.requestVideoFrameCallback(onVideoFrame)
+        checkFrame()
+      } else {
+        const ms = intervalMs
+        intervalRef.current = setInterval(checkFrame, ms)
+        checkFrame()
+      }
     }
 
     const onVisibilityChange = () => { schedule() }
@@ -191,6 +236,10 @@ export function useMarkerDetection(videoRef, options = {}) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
+      }
+      if (video.cancelVideoFrameCallback && rvfcHandleRef.current != null) {
+        video.cancelVideoFrameCallback(rvfcHandleRef.current)
+        rvfcHandleRef.current = null
       }
       if (worker) worker.removeEventListener('message', onWorkerMessage)
     }

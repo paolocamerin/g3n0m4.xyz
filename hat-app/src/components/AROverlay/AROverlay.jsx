@@ -466,7 +466,7 @@ export default function AROverlay({
     >
       <Canvas
         frameloop={isPageVisible ? 'always' : 'never'}
-        gl={{ alpha: true, antialias: true }}
+        gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
         camera={{
           position: [0, 0, 0],
           fov: cameraFov,

@@ -93,8 +93,7 @@
   height: 56px;
   border-radius: 50%;
   border: 3px solid rgba(255, 255, 255, 0.9);
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(12px);
+  background: #dc2626;
   color: white;
   cursor: pointer;
   display: inline-flex;
@@ -105,7 +104,7 @@
 }
 
 .camera-capture-btn:hover {
-  background: rgba(0, 0, 0, 0.7);
+  background: #b91c1c;
 }
 
 .camera-capture-btn:active {

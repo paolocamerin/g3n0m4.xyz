@@ -35,11 +35,19 @@ export function useCamera() {
 
       setStream(mediaStream)
       setHasPermission(true)
+      try {
+        localStorage.setItem('hat-app-camera-granted', 'true')
+      } catch (e) {
+        // localStorage may be unavailable (private browsing, quota)
+      }
       // Stream is attached and played in the useEffect when stream updates
     } catch (err) {
       console.error('Error accessing camera:', err)
       setError(err.message || 'Failed to access camera')
       setHasPermission(false)
+      try {
+        localStorage.setItem('hat-app-camera-granted', 'false')
+      } catch (e) {}
       
       // Provide user-friendly error messages
       if (err.name === 'NotAllowedError') {
