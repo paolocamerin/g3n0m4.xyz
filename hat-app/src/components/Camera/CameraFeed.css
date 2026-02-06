@@ -78,6 +78,40 @@
   z-index: 2; /* above AR canvas so toggle is clickable */
 }
 
+.camera-overlay-actions {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.camera-capture-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.camera-capture-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.camera-capture-btn:active {
+  transform: scale(0.95);
+}
+
 .camera-controls-toggle {
   pointer-events: auto;
   display: inline-flex;
@@ -106,7 +140,7 @@
 }
 
 .camera-controls-toggle--closed {
-  margin-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  margin-bottom: 0;
   align-self: center;
 }
 
@@ -517,8 +551,12 @@
     padding: 8px 12px;
   }
 
-  .camera-controls-toggle--closed {
+  .camera-overlay-actions {
     margin-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .camera-controls-toggle--closed {
+    margin-bottom: 0;
   }
 
   .camera-qr-hint {

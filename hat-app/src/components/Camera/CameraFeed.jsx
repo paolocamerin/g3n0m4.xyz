@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { SidebarIcon, XIcon } from '@phosphor-icons/react'
+import { CameraIcon, SidebarIcon, XIcon } from '@phosphor-icons/react'
 import { useCamera } from '../../hooks/useCamera'
 import { useFaceMesh } from '../../hooks/useFaceMesh'
 import { useMarkerDetection, decodeQRFromImageData } from '../../hooks/useMarkerDetection'
@@ -46,7 +46,7 @@ export default function CameraFeed() {
   const [testQRResult, setTestQRResult] = useState(null)
   const [showQRDebugFrame, setShowQRDebugFrame] = useState(false)
   const [useQRTrigger, setUseQRTrigger] = useState(true)
-  const [controlsOpen, setControlsOpen] = useState(true)
+  const [controlsOpen, setControlsOpen] = useState(false)
   const testFileInputRef = useRef(null)
   const qrDebugCanvasRef = useRef(null)
   const {
@@ -98,6 +98,63 @@ export default function CameraFeed() {
 
   const handleRetry = () => {
     startCamera()
+  }
+
+  const handleTakePhoto = useCallback(() => {
+    const container = containerRef.current
+    const camCanvas = canvasRef.current
+    if (!container || !camCanvas) return
+
+    const rect = container.getBoundingClientRect()
+    const dpr = window.devicePixelRatio || 1
+    const w = Math.round(rect.width * dpr)
+    const h = Math.round(rect.height * dpr)
+    if (w <= 0 || h <= 0) return
+
+    const off = document.createElement('canvas')
+    off.width = w
+    off.height = h
+    const ctx = off.getContext('2d')
+    if (!ctx) return
+
+    const camW = camCanvas.width
+    const camH = camCanvas.height
+    if (camW && camH) {
+      const scale = Math.max(w / camW, h / camH)
+      const dw = camW * scale
+      const dh = camH * scale
+      ctx.drawImage(camCanvas, (w - dw) / 2, (h - dh) / 2, dw, dh)
+    }
+
+    const arCanvas = container.querySelector('.ar-overlay canvas')
+    if (arCanvas) {
+      ctx.drawImage(arCanvas, 0, 0, w, h)
+    }
+
+    off.toBlob((blob) => {
+      if (!blob) return
+      const file = new File([blob], `ar-hat-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`, { type: 'image/png' })
+      const url = URL.createObjectURL(blob)
+
+      if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare?.({ files: [file] })) {
+        navigator.share({ files: [file], title: 'AR Hat Photo' }).catch(() => {
+          downloadUrl(url, file.name)
+        }).finally(() => URL.revokeObjectURL(url))
+      } else {
+        downloadUrl(url, file.name)
+        URL.revokeObjectURL(url)
+      }
+    }, 'image/png', 1)
+  }, [])
+
+  function downloadUrl(url, filename) {
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.rel = 'noopener'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
   }
 
   const handleTestQRFile = useCallback((e) => {
@@ -212,17 +269,30 @@ export default function CameraFeed() {
         />
       )}
       <div className="camera-overlay">
-        {!controlsOpen && (
-          <button
-            type="button"
-            className="camera-controls-toggle camera-controls-toggle--closed"
-            onClick={() => setControlsOpen(true)}
-            aria-label="Open panel"
-            title="Open panel"
-          >
-            <SidebarIcon size={20} weight="regular" className="camera-controls-toggle-icon" aria-hidden />
-            <span>Open panel</span>
-          </button>
+        {hasPermission && (
+          <div className="camera-overlay-actions">
+            <button
+              type="button"
+              className="camera-capture-btn"
+              onClick={handleTakePhoto}
+              aria-label="Take photo"
+              title="Take photo (saves to photos or downloads)"
+            >
+              <CameraIcon size={28} weight="regular" aria-hidden />
+            </button>
+            {!controlsOpen && (
+              <button
+                type="button"
+                className="camera-controls-toggle camera-controls-toggle--closed"
+                onClick={() => setControlsOpen(true)}
+                aria-label="Open panel"
+                title="Open panel"
+              >
+                <SidebarIcon size={20} weight="regular" className="camera-controls-toggle-icon" aria-hidden />
+                <span>Open panel</span>
+              </button>
+            )}
+          </div>
         )}
         <div className={`camera-controls-panel ${controlsOpen ? '' : 'camera-controls-panel--closed'}`}>
           <button
