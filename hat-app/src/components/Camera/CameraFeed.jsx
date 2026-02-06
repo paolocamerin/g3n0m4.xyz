@@ -45,7 +45,7 @@ export default function CameraFeed() {
   const [sphereDepth, setSphereDepth] = useState(0.95)
   const [testQRResult, setTestQRResult] = useState(null)
   const [showQRDebugFrame, setShowQRDebugFrame] = useState(false)
-  const [useQRTrigger, setUseQRTrigger] = useState(true)
+  const [useQRTrigger, setUseQRTrigger] = useState(false)
   const [controlsOpen, setControlsOpen] = useState(false)
   const testFileInputRef = useRef(null)
   const qrDebugCanvasRef = useRef(null)
