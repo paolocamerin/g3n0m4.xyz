@@ -9,57 +9,90 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <!-- Favicon (auto-adapts to light/dark mode) -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <meta name="google-site-verification" content="s1al3dF8YJD3JxvCU6GEGI62rlRx1uFdANk-b_dV7Go" />
     <meta name="description"
-        content="Paolo Camerin – Designer & Technologist. Explore my projects, thoughts, and portfolio." />
-    <meta name="keywords" content="Paolo Camerin, designer, technologist, interaction design, creative coding" />
+        content="Paolo Camerin – Designer & Digital Artist. Selected design and artistic work." />
+    <meta name="keywords" content="Paolo Camerin, designer, technologist, interaction design, creative coding, digital art" />
     <meta name="author" content="Paolo Camerin" />
     <meta name="robots" content="index, follow" />
-
 </head>
 
 <body>
 
+    <header class="site-header">
+        <a class="site-name" href="mailto:paolo.camerin@outlook.com">Paolo Camerin</a>
+
+        <nav class="segmented" role="tablist" aria-label="Section">
+            <button class="segment is-active" role="tab" aria-selected="true" data-view="design" id="tab-design">Design</button>
+            <button class="segment" role="tab" aria-selected="false" data-view="art" id="tab-art">Art</button>
+            <span class="segment-indicator" aria-hidden="true"></span>
+        </nav>
+    </header>
+
     <main>
-        <div class="content">
-
-
-            <h1 class="main-title">
-                <a href="mailto:paolo.camerin@outlook.com">Paolo Camerin</a>, <a
-                    href="https://instagram.com/g3n0m4">Digital
-                    artist</a> & Interaction designer.
-            </h1>
-            <div class="coming-soon">...more to come soon</div>
-            <p class="hat-app-link" id="debug-hat-app-link" data-hide-on="g3n0m4.xyz"><a href="./hat-app/">AR Hat App</a> — try the camera demo.</p>
-        </div>
-        <div class="video-gallery" aria-hidden="true">
-            <div class="video-card">
-                <video src="./Assets/Videos/baroque.mp4" autoplay muted loop playsinline aria-label="Decorative baroque animation"></video>
+        <!-- DESIGN VIEW -->
+        <section class="view view-design is-active" id="view-design" role="tabpanel" aria-labelledby="tab-design">
+            <div class="card-slide">
+                <a class="project-card" id="project-bilista" href="./projects/bilista.html" aria-label="Open Bilista case study">
+                    <div class="project-hero">
+                        <picture>
+                            <source media="(max-width: 1000px)" srcset="./Assets/projects/bilista/hero-v.jpg">
+                            <img src="./Assets/projects/bilista/hero-v.jpg" alt="Bilista — Norway's private mobility platform" loading="eager" decoding="async">
+                        </picture>
+                    </div>
+                    <div class="project-meta">
+                        <p class="project-tags">EGGS Design · Oslo · 2022 – 2023</p>
+                        <h2 class="project-title">Bilista</h2>
+                        <p class="project-subtitle">From concept to market — Norway's private mobility platform.</p>
+                        <p class="project-description">A holistic car ownership platform built for Gjensidige Mobility Group. Taken from open concept to market-ready product.</p>
+                        <span class="project-cta">View case study →</span>
+                    </div>
+                </a>
             </div>
-            <div class="video-card">
-                <video src="./Assets/Videos/green.mp4" autoplay muted loop playsinline aria-label="Decorative green animation"></video>
-            </div>
-            <div class="video-card">
-                <video src="./Assets/Videos/paint.mp4" autoplay muted loop playsinline aria-label="Decorative paint animation"></video>
-            </div>
-        </div>
 
+            <!-- Mock card for scroll testing -->
+            <div class="card-slide">
+                <a class="project-card project-card--mock" href="#" aria-label="Mock project card">
+                    <div class="project-hero">
+                        <div class="project-hero-placeholder" aria-hidden="true"></div>
+                    </div>
+                    <div class="project-meta">
+                        <p class="project-tags">Placeholder · Year · Context</p>
+                        <h2 class="project-title">Mock Project</h2>
+                        <p class="project-subtitle">Second card to verify scroll-snap and peek.</p>
+                        <p class="project-description">This card is here only to test layout and scrolling behavior. It will be replaced with a real project.</p>
+                        <span class="project-cta">Coming soon</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- ART VIEW -->
+        <section class="view view-art" id="view-art" role="tabpanel" aria-labelledby="tab-art" hidden>
+            <div class="video-gallery" aria-hidden="true">
+                <div class="video-card">
+                    <video src="./Assets/Videos/baroque.mp4" autoplay muted loop playsinline aria-label="Decorative baroque animation"></video>
+                </div>
+                <div class="video-card">
+                    <video src="./Assets/Videos/green.mp4" autoplay muted loop playsinline aria-label="Decorative green animation"></video>
+                </div>
+                <div class="video-card">
+                    <video src="./Assets/Videos/paint.mp4" autoplay muted loop playsinline aria-label="Decorative paint animation"></video>
+                </div>
+            </div>
+            <div class="art-coming-soon">More to come soon</div>
+        </section>
     </main>
+
     <footer class="footer">
         ©
         <script>document.write(new Date().getFullYear())</script>
+        Paolo Camerin
     </footer>
+
     <script src="./scripts/autoplay-fix.js"></script>
-    <script>
-      (function () {
-        var el = document.getElementById('debug-hat-app-link');
-        if (el && el.getAttribute('data-hide-on') && location.hostname.endsWith(el.getAttribute('data-hide-on'))) {
-          el.hidden = true;
-        }
-      })();
-    </script>
+    <script src="./scripts/tabs.js"></script>
 </body>
 
 </html>

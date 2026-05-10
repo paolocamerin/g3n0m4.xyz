@@ -423,3 +423,6 @@ yarn-error.log
 # Build outputs
 dist/
 build/
+
+# Local working copy / drafts
+pages-data/
