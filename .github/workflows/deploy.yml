@@ -10,6 +10,7 @@ on:
       - 'Assets/**'
       - 'scripts/**'
       - 'tutorials/**'
+      - 'projects/**'
       - 'hat-app/**'
       - 'favicon.svg'
       - 'sitemap.xml'
@@ -61,6 +62,8 @@ jobs:
           [ -d Assets ] && cp -r Assets deploy/ 2>/dev/null || true
           # Copy scripts folder
           [ -d scripts ] && cp -r scripts deploy/ 2>/dev/null || true
+          # Copy projects folder (case-study pages)
+          [ -d projects ] && cp -r projects deploy/ 2>/dev/null || true
           # Copy tutorials folder (excluding build-time files)
           if [ -d tutorials ]; then
             mkdir -p deploy/tutorials
