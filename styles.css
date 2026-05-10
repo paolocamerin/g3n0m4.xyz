@@ -990,6 +990,24 @@ body.project-page {
         font-size: clamp(0.78rem, 1.5vw, 0.92rem);
         margin-top: clamp(10px, 2vw, 22px);
     }
+.hat-app-link {
+    font-size: 0.5em;
+    color: var(--secondary-color);
+    margin-top: 0.5rem;
+    font-weight: 300;
+}
+
+.hat-app-link a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.hat-app-link a:hover {
+    opacity: 0.8;
+}
+
+video {
+    width: 100%;
 }
 
 /* ---------- Mobile ---------- */

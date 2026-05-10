@@ -97,7 +97,7 @@ function generateTutorial(tutorial, template) {
 
     // Assets JSON
     const assetsJSON = JSON.stringify(tutorial.assets || [], null, 8);
-    html = html.replace(/\{\{ASSETS_JSON\}\}/g, assetsJSON);
+    html = html.replace(/__ASSETS_JSON__/g, assetsJSON);
 
     return html;
 }

@@ -2,8 +2,11 @@
   position: relative;
   width: 100%;
   height: 100%;
+  min-height: 0;
+  min-width: 0;
   overflow: hidden;
   background: #000;
+  /* Fill parent in both portrait and landscape; min-height: 0 allows flex shrink */
 }
 
 .camera-video {
@@ -11,6 +14,53 @@
   height: 100%;
   object-fit: cover;
   transform: scaleX(-1); /* Mirror the video for natural selfie view */
+}
+
+.camera-video--hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  /* Still plays and feeds MediaPipe; we display the canvas instead */
+}
+
+.camera-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror for natural selfie view */
+}
+
+.camera-qr-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  /* No mirror: we decode the flipped frame so box coords already match displayed feed */
+  z-index: 1;
+}
+
+.camera-qr-hint {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  pointer-events: none;
 }
 
 .camera-overlay {
@@ -22,19 +72,348 @@
   pointer-events: none;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: flex-end;
   align-items: center;
-  padding: 20px;
+  padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 2; /* above AR canvas so toggle is clickable */
 }
 
-.status-indicator {
+.camera-overlay-actions {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.camera-capture-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  background: #dc2626;
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.camera-capture-btn:hover {
+  background: #b91c1c;
+}
+
+.camera-capture-btn:active {
+  transform: scale(0.95);
+}
+
+.camera-controls-toggle {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.camera-controls-toggle:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.camera-controls-toggle:active {
+  transform: scale(0.98);
+}
+
+.camera-controls-toggle--closed {
+  margin-bottom: 0;
+  align-self: center;
+}
+
+.camera-controls-toggle--open {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 6px 10px;
+  min-width: auto;
+}
+
+.camera-controls-toggle-icon {
+  flex-shrink: 0;
+  color: currentColor;
+  opacity: 0.95;
+}
+
+.camera-controls-panel {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  padding: 12px calc(16px + env(safe-area-inset-left, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-right, 0px));
+  padding-top: 36px;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(0);
+  transition: transform 0.25s ease-out;
+}
+
+.camera-controls-panel--closed {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 100%);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.camera-controls-panel .mesh-toggle {
+  pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: rgba(0, 0, 0, 0.6);
   padding: 8px 16px;
   border-radius: 20px;
   backdrop-filter: blur(10px);
+  cursor: pointer;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  user-select: none;
+}
+
+.camera-overlay .mesh-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.camera-overlay .mesh-toggle-track {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.25);
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.camera-overlay .mesh-toggle-track.on {
+  background: #4ade80;
+}
+
+.camera-overlay .mesh-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s;
+}
+
+.camera-overlay .mesh-toggle-track.on .mesh-toggle-thumb {
+  transform: translateX(20px);
+}
+
+.camera-controls-panel .ar-controls {
+  pointer-events: auto;
+  margin-top: 0;
+  display: flex;
+  width: 100%;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  min-width: unset;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 12px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  min-width: 200px;
+}
+
+.ar-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ar-control label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: default;
+}
+
+.ar-control-label {
+  opacity: 0.9;
+}
+
+.ar-control-value {
+  font-variant-numeric: tabular-nums;
+  min-width: 2.5em;
+  text-align: right;
+}
+
+.ar-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.25);
+  accent-color: #4ade80;
+}
+
+.ar-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.ar-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.camera-controls-panel .status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  padding: 0 0 4px;
+  border-radius: 0;
+  backdrop-filter: none;
+}
+
+.camera-controls-panel .camera-qr-status {
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.camera-qr-status .status-text {
+  word-break: break-all;
+  font-size: 13px;
+}
+
+.camera-qr-test {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.camera-qr-test-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.camera-qr-test-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.camera-qr-test-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.camera-qr-test-result {
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  word-break: break-all;
+  pointer-events: none;
+}
+
+.camera-qr-test-result.ok {
+  background: rgba(74, 222, 128, 0.2);
+  color: #86efac;
+}
+
+.camera-qr-test-result.err {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.camera-qr-debug-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.camera-qr-debug-canvas {
+  display: block;
+  width: 200px;
+  height: 150px;
+  object-fit: contain;
+  background: #111;
+  border-radius: 4px;
+  align-self: center;
+}
+
+.camera-qr-debug-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
 }
 
 .status-dot {
@@ -136,6 +515,52 @@
   }
 
   .status-text {
+    font-size: 12px;
+  }
+}
+
+/* Landscape: less vertical space – compact panel and safe layout */
+@media (orientation: landscape) {
+  .camera-overlay {
+    padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .camera-controls-panel {
+    max-height: min(70vh, 420px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding: 8px calc(12px + env(safe-area-inset-left, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) calc(12px + env(safe-area-inset-right, 0px));
+    padding-top: 32px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .camera-controls-panel .status-indicator,
+  .camera-controls-panel .camera-qr-status {
+    padding: 2px 0;
+  }
+
+  .camera-controls-panel .mesh-toggle {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .camera-controls-panel .ar-controls {
+    padding: 8px 12px;
+  }
+
+  .camera-overlay-actions {
+    margin-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .camera-controls-toggle--closed {
+    margin-bottom: 0;
+  }
+
+  .camera-qr-hint {
+    top: 8px;
+    padding: 6px 12px;
     font-size: 12px;
   }
 }

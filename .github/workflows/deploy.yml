@@ -10,6 +10,7 @@ on:
       - 'Assets/**'
       - 'scripts/**'
       - 'tutorials/**'
+      - 'hat-app/**'
       - 'favicon.svg'
       - 'sitemap.xml'
       - 'package.json'
@@ -38,6 +39,10 @@ jobs:
       
       - name: Build tutorials
         run: npm run build:tutorials
+      
+      - name: Build hat-app
+        run: |
+          cd hat-app && npm ci && npm run build
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -74,6 +79,11 @@ jobs:
             rm -f deploy/tutorials/data.json 2>/dev/null || true
             rm -f deploy/tutorials/tutorial-template.html 2>/dev/null || true
             rm -f deploy/tutorials/README.md 2>/dev/null || true
+          fi
+          # Copy hat-app build (Vite output with base /hat-app/)
+          if [ -d hat-app/dist ]; then
+            mkdir -p deploy/hat-app
+            cp -r hat-app/dist/* deploy/hat-app/
           fi
           echo "✅ Deployment prepared"
           ls -la deploy/
