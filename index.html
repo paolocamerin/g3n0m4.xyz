@@ -1,98 +1,267 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Paolo Camerin</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="styles.css" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta
+            name="google-site-verification"
+            content="s1al3dF8YJD3JxvCU6GEGI62rlRx1uFdANk-b_dV7Go"
+        />
+        <meta
+            name="description"
+            content="Paolo Camerin – Designer & Digital Artist. Selected design and artistic work."
+        />
+        <meta
+            name="keywords"
+            content="Paolo Camerin, designer, technologist, interaction design, creative coding, digital art"
+        />
+        <meta name="author" content="Paolo Camerin" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://g3n0m4.xyz/" />
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paolo Camerin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <meta name="google-site-verification" content="s1al3dF8YJD3JxvCU6GEGI62rlRx1uFdANk-b_dV7Go" />
-    <meta name="description"
-        content="Paolo Camerin – Designer & Digital Artist. Selected design and artistic work." />
-    <meta name="keywords" content="Paolo Camerin, designer, technologist, interaction design, creative coding, digital art" />
-    <meta name="author" content="Paolo Camerin" />
-    <meta name="robots" content="index, follow" />
-</head>
+        <!-- Open Graph -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://g3n0m4.xyz/" />
+        <meta
+            property="og:title"
+            content="Paolo Camerin — Designer & Digital Artist"
+        />
+        <meta
+            property="og:description"
+            content="Product design, interaction design, and digital art by Paolo Camerin."
+        />
+        <meta
+            property="og:image"
+            content="https://g3n0m4.xyz/Assets/og-image.jpg"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:locale" content="en_US" />
 
-<body>
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+            name="twitter:title"
+            content="Paolo Camerin — Designer & Digital Artist"
+        />
+        <meta
+            name="twitter:description"
+            content="Product design, interaction design, and digital art by Paolo Camerin."
+        />
+        <meta
+            name="twitter:image"
+            content="https://g3n0m4.xyz/Assets/og-image.jpg"
+        />
 
-    <header class="site-header">
-        <a class="site-name" href="mailto:paolo.camerin@outlook.com">Paolo Camerin</a>
+        <!-- Structured data -->
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@graph": [
+                    {
+                        "@type": "Person",
+                        "@id": "https://g3n0m4.xyz/#person",
+                        "name": "Paolo Camerin",
+                        "alternateName": "g3n0m4",
+                        "url": "https://g3n0m4.xyz/",
+                        "email": "paolo.camerin@outlook.com",
+                        "jobTitle": "Designer & Digital Artist",
+                        "description": "Product designer, interaction designer, and digital artist working at the intersection of design and creative technology.",
+                        "sameAs": [
+                            "https://www.linkedin.com/in/paolo-camerin/",
+                            "https://www.instagram.com/g3n0m4/",
+                            "https://www.youtube.com/@g3n0m4_xyz"
+                        ]
+                    },
+                    {
+                        "@type": "WebSite",
+                        "@id": "https://g3n0m4.xyz/#website",
+                        "url": "https://g3n0m4.xyz/",
+                        "name": "Paolo Camerin",
+                        "description": "Portfolio and creative outlet for Paolo Camerin — designer and digital artist.",
+                        "publisher": { "@id": "https://g3n0m4.xyz/#person" }
+                    }
+                ]
+            }
+        </script>
+    </head>
 
-        <nav class="segmented" role="tablist" aria-label="Section">
-            <button class="segment is-active" role="tab" aria-selected="true" data-view="design" id="tab-design">Design</button>
-            <button class="segment" role="tab" aria-selected="false" data-view="art" id="tab-art">Art</button>
-            <span class="segment-indicator" aria-hidden="true"></span>
-        </nav>
-    </header>
+    <body>
+        <header class="site-header">
+            <a class="site-name" href="mailto:paolo.camerin@outlook.com"
+                >Paolo Camerin</a
+            >
 
-    <main>
-        <!-- DESIGN VIEW -->
-        <section class="view view-design is-active" id="view-design" role="tabpanel" aria-labelledby="tab-design">
-            <div class="card-slide">
-                <a class="project-card" id="project-bilista" href="./projects/bilista.html" aria-label="Open Bilista case study">
-                    <div class="project-hero">
-                        <picture>
-                            <source media="(max-width: 1000px)" srcset="./Assets/projects/bilista/hero-v.jpg">
-                            <img src="./Assets/projects/bilista/hero-v.jpg" alt="Bilista — Norway's private mobility platform" loading="eager" decoding="async">
-                        </picture>
-                    </div>
-                    <div class="project-meta">
-                        <p class="project-tags">EGGS Design · Oslo · 2022 – 2023</p>
-                        <h2 class="project-title">Bilista</h2>
-                        <p class="project-subtitle">From concept to market — Norway's private mobility platform.</p>
-                        <p class="project-description">A holistic car ownership platform built for Gjensidige Mobility Group. Taken from open concept to market-ready product.</p>
-                        <span class="project-cta">View case study →</span>
-                    </div>
-                </a>
-            </div>
+            <nav class="segmented" role="tablist" aria-label="Section">
+                <button
+                    class="segment is-active"
+                    role="tab"
+                    aria-selected="true"
+                    data-view="design"
+                    id="tab-design"
+                >
+                    Design
+                </button>
+                <button
+                    class="segment"
+                    role="tab"
+                    aria-selected="false"
+                    data-view="art"
+                    id="tab-art"
+                >
+                    Art
+                </button>
+                <span class="segment-indicator" aria-hidden="true"></span>
+            </nav>
+        </header>
 
-            <!-- Mock card for scroll testing -->
-            <div class="card-slide">
-                <a class="project-card project-card--mock" href="#" aria-label="Mock project card">
-                    <div class="project-hero">
-                        <div class="project-hero-placeholder" aria-hidden="true"></div>
-                    </div>
-                    <div class="project-meta">
-                        <p class="project-tags">Placeholder · Year · Context</p>
-                        <h2 class="project-title">Mock Project</h2>
-                        <p class="project-subtitle">Second card to verify scroll-snap and peek.</p>
-                        <p class="project-description">This card is here only to test layout and scrolling behavior. It will be replaced with a real project.</p>
-                        <span class="project-cta">Coming soon</span>
-                    </div>
-                </a>
-            </div>
-        </section>
-
-        <!-- ART VIEW -->
-        <section class="view view-art" id="view-art" role="tabpanel" aria-labelledby="tab-art" hidden>
-            <div class="video-gallery" aria-hidden="true">
-                <div class="video-card">
-                    <video src="./Assets/Videos/baroque.mp4" autoplay muted loop playsinline aria-label="Decorative baroque animation"></video>
+        <main>
+            <!-- DESIGN VIEW -->
+            <section
+                class="view view-design is-active"
+                id="view-design"
+                role="tabpanel"
+                aria-labelledby="tab-design"
+            >
+                <div class="card-slide">
+                    <a
+                        class="project-card"
+                        id="project-bilista"
+                        href="./projects/bilista.html"
+                        aria-label="Open Bilista case study"
+                    >
+                        <div class="project-hero">
+                            <picture>
+                                <source
+                                    media="(max-width: 1000px)"
+                                    srcset="
+                                        ./Assets/projects/bilista/hero-v.jpg
+                                    "
+                                />
+                                <img
+                                    src="./Assets/projects/bilista/hero-v.jpg"
+                                    alt="Bilista — Norway's private mobility platform"
+                                    loading="eager"
+                                    decoding="async"
+                                />
+                            </picture>
+                        </div>
+                        <div class="project-meta">
+                            <p class="project-tags">
+                                EGGS Design · Oslo · 2022 – 2023
+                            </p>
+                            <h2 class="project-title">Bilista</h2>
+                            <p class="project-subtitle">
+                                From concept to market — Norway's private
+                                mobility platform.
+                            </p>
+                            <p class="project-description">
+                                A holistic car ownership platform built for
+                                Gjensidige Mobility Group. Taken from open
+                                concept to market-ready product.
+                            </p>
+                            <span class="project-cta">View case study →</span>
+                        </div>
+                    </a>
                 </div>
-                <div class="video-card">
-                    <video src="./Assets/Videos/green.mp4" autoplay muted loop playsinline aria-label="Decorative green animation"></video>
+
+                <div class="card-slide">
+                    <div
+                        class="project-card project-card--wip"
+                        role="img"
+                        aria-label="Work in progress — stay tuned"
+                    >
+                        <img
+                            src="./Assets/underConstruction.gif"
+                            alt=""
+                            aria-hidden="true"
+                            class="wip-gif"
+                        />
+                        <p class="wip-label">Stay tuned</p>
+                    </div>
                 </div>
-                <div class="video-card">
-                    <video src="./Assets/Videos/paint.mp4" autoplay muted loop playsinline aria-label="Decorative paint animation"></video>
+            </section>
+
+            <!-- ART VIEW -->
+            <section
+                class="view view-art"
+                id="view-art"
+                role="tabpanel"
+                aria-labelledby="tab-art"
+                hidden
+            >
+                <div class="video-gallery">
+                    <a
+                        class="video-card"
+                        href="https://www.instagram.com/g3n0m4/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="View on Instagram"
+                    >
+                        <video
+                            src="./Assets/Videos/baroque.mp4"
+                            autoplay
+                            muted
+                            loop
+                            playsinline
+                            aria-hidden="true"
+                        ></video>
+                    </a>
+                    <a
+                        class="video-card"
+                        href="https://www.instagram.com/g3n0m4/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="View on Instagram"
+                    >
+                        <video
+                            src="./Assets/Videos/green.mp4"
+                            autoplay
+                            muted
+                            loop
+                            playsinline
+                            aria-hidden="true"
+                        ></video>
+                    </a>
+                    <a
+                        class="video-card"
+                        href="https://www.instagram.com/g3n0m4/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="View on Instagram"
+                    >
+                        <video
+                            src="./Assets/Videos/paint.mp4"
+                            autoplay
+                            muted
+                            loop
+                            playsinline
+                            aria-hidden="true"
+                        ></video>
+                    </a>
                 </div>
-            </div>
-            <div class="art-coming-soon">More to come soon</div>
-        </section>
-    </main>
+                <div class="art-coming-soon">More to come soon</div>
+            </section>
+        </main>
 
-    <footer class="footer">
-        ©
-        <script>document.write(new Date().getFullYear())</script>
-        Paolo Camerin
-    </footer>
+        <footer class="footer">
+            ©
+            <script>
+                document.write(new Date().getFullYear());
+            </script>
+            Paolo Camerin
+        </footer>
 
-    <script src="./scripts/autoplay-fix.js"></script>
-    <script src="./scripts/tabs.js"></script>
-</body>
-
+        <script src="./scripts/autoplay-fix.js"></script>
+        <script src="./scripts/tabs.js"></script>
+    </body>
 </html>

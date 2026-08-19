@@ -1,0 +1,26 @@
+# Paolo Camerin
+
+> Designer, digital artist, and creative technologist based in Oslo.
+
+Paolo Camerin (online: g3n0m4) works at the intersection of product design, interaction design, and digital art. His work spans UX/UI for commercial products, generative art, and creative coding using tools like TouchDesigner.
+
+## Work
+
+- [Portfolio — Design](https://g3n0m4.xyz/): Selected product design case studies
+- [Bilista case study](https://g3n0m4.xyz/projects/bilista.html): Norway's first holistic car ownership platform, built for Gjensidige Mobility Group at EGGS Design in Oslo (2022–2023). Full-cycle UX/UI: research, prototyping, testing, component library, and design system.
+
+## Tutorials & Creative Work
+
+- [Holographic card — TouchDesigner tutorial](https://g3n0m4.xyz/tutorials/06-holographic-card/): Free assets and walkthrough for creating a holographic trading-card effect in TouchDesigner.
+- Art section on the portfolio features generative video work (baroque, paint, and abstract motion pieces).
+
+## Contact & Profiles
+
+- Email: paolo.camerin@outlook.com
+- LinkedIn: https://www.linkedin.com/in/paolo-camerin/
+- Instagram: https://www.instagram.com/g3n0m4/
+- YouTube: https://www.youtube.com/@g3n0m4_xyz
+
+## About this site
+
+g3n0m4.xyz is a personal portfolio and creative outlet. Content is in English. The site is updated periodically with new projects and tutorials.
